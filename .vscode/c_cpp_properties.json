@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "MQL5",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Program Files/MetaTrader 5/MQL5/Include/**"
+            ],
+            "defines": [],
+            "compilerPath": "C:/Program Files/MetaTrader 5/terminal64.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+} 

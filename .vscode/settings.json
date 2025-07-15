@@ -1,0 +1,47 @@
+{
+    "problems.decorations.enabled": false,
+    "editor.quickSuggestions": {
+        "comments": "off",
+        "strings": "off",
+        "other": "off"
+    },
+    "editor.semanticHighlighting.enabled": false,
+    "editor.parameterHints.enabled": false,
+    "editor.diagnostics.enabled": false,
+    "problems.showCurrentInStatus": false,
+    "editor.hover.enabled": false,
+    "C_Cpp.errorSquiggles": "disabled",
+    "mqlens.validation.enabled": true,
+    "mqlens.formatting.enabled": true,
+    "mqlens.intellisense.enabled": true,
+    "mqlens.hover.enabled": true,
+    "mqlens.completion.enabled": true,
+    "mqlens.diagnostics.maxProblems": 100,
+    "mqlens.formatting.indentSize": 4,
+    "mqlens.formatting.insertSpaces": true,
+    "editor.codeActionsOnSave": {},
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "problems.decorations.enabled": false,
+    "workbench.colorCustomizations": {
+        "problemsErrorIcon.foreground": "#00000000",
+        "problemsWarningIcon.foreground": "#00000000",
+        "problemsInfoIcon.foreground": "#00000000"
+    },
+    "editor.semanticHighlighting.enabled": false,
+"editor.codeLens": false,
+"editor.inlayHints.enabled": "off",
+"editor.quickSuggestions": false,
+"[plaintext]": {
+  "editor.quickSuggestions": {
+    "comments": "off",
+    "strings": "off",
+    "other": "off"
+}
+},
+"files.associations": {
+    "*.mqh": "cpp"
+}
+    
+}
