@@ -9,8 +9,7 @@ struct TicketInfo {
   double volume;
   string state;
   double price;
-  double activePriceFrom;
-  double activePriceTo;
+  double activePrice;
 };
 
 // Define state
@@ -19,7 +18,9 @@ struct TicketInfo {
 //ACTIVE_STOP
 
 string m_tickets[];
-double m_volumes[19] = {
+int jump = 2;
+double m_volumes[];
+double m_volumes1[19] = {
   0.03,
   0.04,
   0.05,
@@ -41,6 +42,19 @@ double m_volumes[19] = {
   0.03
 };
 
+double m_volumes2[10] = {
+   0.05,
+   0.07,
+   0.09,
+   0.11,
+   0.13,
+   0.16,
+   0.16,
+   0.13,
+   0.09,
+   0.07
+};
+
 
 int dailyBiasRuning = 0;
 double dailyBiasSL;
@@ -49,6 +63,16 @@ ENUM_ORDER_TYPE orderTypeDailyBias = ORDER_TYPE_BUY; // chỗ này gọi hàm ch
 
 int OnInit()
 {
+  if (jump == 1) {
+    ArrayResize(m_tickets, 0);
+    ArrayResize(m_tickets, ArraySize(m_volumes1));
+    ArrayCopy(m_volumes, m_volumes1);  // ✅ Gán mảng đúng cách
+  }
+  else {
+    ArrayResize(m_tickets, 0);
+    ArrayResize(m_tickets, ArraySize(m_volumes2));
+    ArrayCopy(m_volumes, m_volumes2);
+  }
   EventSetTimer(1); // Set cho Ontimer chạy mỗi giây
   return(INIT_SUCCEEDED);
 }
@@ -74,6 +98,10 @@ void OnTimer() {
     Print("run daily on: ", now);
   }
 
+  if (dailyBiasRuning == 1) {
+    scanDailyBias();
+  }
+
 }
 
 // Hàm lấy giá hiện tại mua và bán 
@@ -97,32 +125,31 @@ void startDailyBias() {
   currentPrice = NormalizeDouble(currentPrice, 3);
   ArrayResize(m_tickets, 0);
   ArrayResize(m_tickets, ArraySize(m_volumes));
-  for (int i = 0; i < ArraySize(m_volumes); i++) {
-    double price;
-    double activePriceFrom;
-    double activePriceTo;
 
+  // Khởi tạo lệnh đầu tiên
+  dailyBiasSL = currentPrice - 100; // => chưa handler
+  dailyBiasTP = currentPrice + 2; // => chưa handler
+  ulong ticketId = PlaceOrder(orderTypeDailyBias, currentPrice, m_volumes[0], dailyBiasSL, dailyBiasTP);
+  string mapFirstValue = StringFormat("T%i V%.2f S%s P%.3f A%.3f", ticketId, m_volumes[0], "OPEN", currentPrice, 0);
+  Print(mapFirstValue);
+  m_tickets[0] = mapFirstValue;
+  // Khởi tạo lệnh đầu tiên
+
+
+  for (int i = 1; i < ArraySize(m_volumes); i++) {
+    double price;
+    double activePrice;
+    int gap = i * jump;
     if (orderTypeDailyBias == ORDER_TYPE_BUY) {
-      price = i == 0 ? currentPrice : currentPrice - i;
-      activePriceFrom = i == 0 ? currentPrice : currentPrice - i - 1;
-      activePriceTo = i == 0 ? currentPrice : currentPrice - i - 2;
+      price = currentPrice - gap;
+      activePrice = price - jump;
     }
     else {
-      price = i == 0 ? currentPrice : currentPrice + i;
-      activePriceFrom = i == 0 ? currentPrice : currentPrice + i + 1;
-      activePriceTo = i == 0 ? currentPrice : currentPrice + i + 2;
+      price = currentPrice + gap;
+      activePrice = price + jump;
     }
     double volume = m_volumes[i];
-    if (i == 0) {
-      dailyBiasSL = price - 20; // hiện tại đặt đại
-      dailyBiasTP = price + 2; // hiện tại đặt đại mốt tính ra target rồi set sau
-      ulong ticketId = PlaceOrder(orderTypeDailyBias, price, volume, dailyBiasSL, dailyBiasTP);
-      string mapFirstValue = StringFormat("T%i V%f S%s P%f AF%f AT%f", ticketId, volume, "OPEN", price, activePriceFrom, activePriceTo);
-      Print(mapFirstValue);
-      m_tickets[i] = mapFirstValue;
-      continue;
-    }
-    string mapValue = StringFormat("T%i V%f S%s P%f AF%f AT%f", 0, volume, "WAITING_STOP", price, activePriceFrom, activePriceTo);
+    string mapValue = StringFormat("T%i V%.2f S%s P%.3f A%.3f", 0, volume, "WAITING_STOP", price, activePrice);
     Print(mapValue);
     m_tickets[i] = mapValue;
   }
@@ -133,26 +160,36 @@ void scanDailyBias() {
     dailyBiasRuning = false;
   }
   double currentPrice = getCurrentPrice(orderTypeDailyBias);
-  int beautifulEntryIndex = NULL;
+  int beautifulEntryIndex = 2;
 
   double totalVolume = 0;
+  // Scan qua mảng giá đã tạo rồi active lệnh khớp với điều kiện currentPrice <= ticketInfo.activePrice => DONE
   for (uint i = 1;i < m_tickets.Size(); i++)
   {
-      TicketInfo ticketInfo = parsePrefix(m_tickets[i]);
-      totalVolume = totalVolume + ticketInfo.volume;
-      if(ticketInfo.activePriceFrom < currentPrice && currentPrice < ticketInfo.activePriceTo){
-         beautifulEntryIndex = (int) i;
-         ulong ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, ticketInfo.price, totalVolume, dailyBiasSL, dailyBiasTP);
-         ticketInfo.state = "ACTIVE_STOP";
-         ticketInfo.ticketId = ticketId;
-         m_tickets[i] = TicketInfoToString(ticketInfo);
-         break;
-      }
+    TicketInfo ticketInfo = parsePrefix(m_tickets[i]);
+    totalVolume = totalVolume + ticketInfo.volume;
+    if (currentPrice <= ticketInfo.activePrice && ticketInfo.state == "WAITING_STOP") {
+      beautifulEntryIndex = (int)i;
+      ticketInfo.ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, ticketInfo.price, totalVolume, dailyBiasSL, dailyBiasTP);
+      ticketInfo.state = "ACTIVE_STOP";
+      m_tickets[i] = TicketInfoToString(ticketInfo);
+      break;
+    }
   }
-  
-  // => chuẩn bị làm clear lệnh xấu
 
+  // Clear lệnh xấu từ beautifulEntryIndex trở về trước => DONE
+  for (int i = 1; i < beautifulEntryIndex; i++) {
+    TicketInfo info = parsePrefix(m_tickets[i]);
+    if (info.state != "OPEN") {
+      if (info.state == "ACTIVE_STOP") {
+        CloseByTicket(info.ticketId);
+      }
+      info.state = "SKIP";
+      m_tickets[i] = TicketInfoToString(info);
+    }
+  }
 }
+
 
 // Hàm tiện lợi
 void SplitString(string source, string delimiter, string& result[])
@@ -197,30 +234,31 @@ TicketInfo parsePrefix(string s) {
       info.state = value;
     else if (prefix == "P")
       info.price = StringToDouble(value);
-    else if (prefix == "AF")
-      info.activePriceFrom = StringToDouble(value);
-    else if (prefix == "AT")
-      info.activePriceTo = StringToDouble(value);
+    else if (prefix == "A")
+      info.activePrice = StringToDouble(value);
   }
 
   return info;
 }
 
-string TicketInfoToString(const TicketInfo &info)
+string TicketInfoToString(const TicketInfo& info)
 {
-   return StringFormat("T%u V%f S%s P%f AF%f AT%f",
-                       info.ticketId,
-                       info.volume,
-                       info.state,
-                       info.price,
-                       info.activePriceFrom,
-                       info.activePriceTo);
+  return StringFormat("T%i V%.2f S%s P%.3f A%.3f",
+    info.ticketId,
+    info.volume,
+    info.state,
+    info.price,
+    info.activePrice);
 }
 
 // Place Order
 ulong PlaceOrder(ENUM_ORDER_TYPE orderType, double price, double volume, double sl, double tp) {
   bool result = false;
 
+  price = NormalizeDouble(price, 3);
+  sl = NormalizeDouble(sl, 3);
+  tp = NormalizeDouble(tp, 3);
+  volume = NormalizeDouble(volume, 2);
   if (orderType == ORDER_TYPE_BUY) {
     result = trade.Buy(volume, _Symbol, price, sl, tp);
   }
