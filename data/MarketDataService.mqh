@@ -2,7 +2,7 @@
 #define __MARKET_DATA_SERVICE_MQH__
 #include "../common/Globals.mqh"
 
-void InitVolumes(const double sourceVolumes[], int size, int inJump)
+void InitVolumes(const double void InitVolumes(const double void InitVolumes(const double sourceVolumes[],sourceVolumes[],sourceVolumes[], int size, int inJump)
 {
    jump = inJump;
    ArrayResize(m_volumes, size);
