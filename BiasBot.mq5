@@ -12,13 +12,13 @@ struct TicketInfo {
   double activePrice;
 };
 
-// Define state
+//Define state
 //OPEN,
 //WAITING_STOP,
 //ACTIVE_STOP
 
 string m_tickets[];
-int jump = 2;
+int jump = 1;
 double m_volumes[];
 double m_volumes1[19] = {
   0.03,
@@ -54,6 +54,10 @@ double m_volumes2[10] = {
    0.09,
    0.07
 };
+bool isFollowTrend = true;
+int targetByIndex1;
+int targetByIndex2;
+int currentEntryIndex;
 
 
 int dailyBiasRuning = 0;
@@ -61,17 +65,22 @@ double dailyBiasSL;
 double dailyBiasTP;
 ENUM_ORDER_TYPE orderTypeDailyBias = ORDER_TYPE_BUY; // chỗ này gọi hàm check là hôm nay buy or sell, mặc định gọi BUY trước để test
 
+
 int OnInit()
 {
   if (jump == 1) {
     ArrayResize(m_tickets, 0);
     ArrayResize(m_tickets, ArraySize(m_volumes1));
     ArrayCopy(m_volumes, m_volumes1);  // ✅ Gán mảng đúng cách
+    targetByIndex1 = 12;
+    targetByIndex2 = 19;
   }
   else {
     ArrayResize(m_tickets, 0);
     ArrayResize(m_tickets, ArraySize(m_volumes2));
     ArrayCopy(m_volumes, m_volumes2);
+    targetByIndex1 = 5;
+    targetByIndex2 = 10;
   }
   EventSetTimer(1); // Set cho Ontimer chạy mỗi giây
   return(INIT_SUCCEEDED);
@@ -101,8 +110,44 @@ void OnTimer() {
   if (dailyBiasRuning == 1) {
     scanDailyBias();
   }
-
 }
+
+// Sự kiện mỗi khi khớp lệnh hoặc tp sl
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest &request,
+                        const MqlTradeResult &result)
+{
+   if (trans.type == TRADE_TRANSACTION_DEAL_ADD)
+   {
+      long entryType = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
+      long dealReason = HistoryDealGetInteger(trans.deal, DEAL_REASON);
+      //if(entryType == DEAL_ENTRY_IN){
+      //}
+      if (entryType == DEAL_ENTRY_OUT && dealReason == DEAL_REASON_TP)
+      {
+         ulong ticketId = HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID);
+         Print("✅ Lệnh đã chốt lời TP thành công. Deal = ", trans.deal);
+         // Update CLOSE để nó khỏi quét qua mảng để khỏi tính vol trung bình cho nó nữa vì nó TP rồi
+         // Hàm chưa chạy
+         updateCloseTicketByTPReason(ticketId);
+         
+      }
+      
+   }
+}
+
+
+void updateCloseTicketByTPReason(ulong ticketId){
+   for(uint i = 0; i < m_tickets.Size(); i++){
+      TicketInfo ticketInfo = parsePrefix(m_tickets[i]);
+      if (ticketId == ticketInfo.ticketId){
+         ticketInfo.state = "CLOSE";
+         m_tickets[i] = TicketInfoToString(ticketInfo);
+         Print("✅ đã set CLOSE cho ticket: ", ticketId);
+      }
+   }
+}
+
 
 // Hàm lấy giá hiện tại mua và bán 
 double getCurrentPrice(ENUM_ORDER_TYPE orderType) {
@@ -122,7 +167,6 @@ double getCurrentPrice(ENUM_ORDER_TYPE orderType) {
 void startDailyBias() {
   dailyBiasRuning = 1;
   double currentPrice = getCurrentPrice(orderTypeDailyBias);
-  currentPrice = NormalizeDouble(currentPrice, 3);
   ArrayResize(m_tickets, 0);
   ArrayResize(m_tickets, ArraySize(m_volumes));
 
@@ -160,22 +204,56 @@ void scanDailyBias() {
     dailyBiasRuning = false;
   }
   double currentPrice = getCurrentPrice(orderTypeDailyBias);
-  int beautifulEntryIndex = 2;
 
+  int beautifulEntryIndex = 2;
   double totalVolume = 0;
+  double sumVolumeOpen = 0; // (vol₁ + vol₂ + ... + volₙ)
+  double sumPriceOpen = 0; // (price₁ × vol₁ + price₂ × vol₂ + ... + priceₙ × volₙ)
+  ulong activeStopNeedUpdateTP = 0;
   // Scan qua mảng giá đã tạo rồi active lệnh khớp với điều kiện currentPrice <= ticketInfo.activePrice => DONE
-  for (uint i = 1;i < m_tickets.Size(); i++)
+  for (uint i = 0;i < m_tickets.Size(); i++)
   {
     TicketInfo ticketInfo = parsePrefix(m_tickets[i]);
     totalVolume = totalVolume + ticketInfo.volume;
+    if(ticketInfo.state == "OPEN"){
+      sumVolumeOpen += ticketInfo.volume;
+      sumPriceOpen += ticketInfo.price * ticketInfo.volume;
+    }
     if (currentPrice <= ticketInfo.activePrice && ticketInfo.state == "WAITING_STOP") {
       beautifulEntryIndex = (int)i;
-      ticketInfo.ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, ticketInfo.price, totalVolume, dailyBiasSL, dailyBiasTP);
+      ticketInfo.ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, ticketInfo.price, totalVolume, 0, 0);
       ticketInfo.state = "ACTIVE_STOP";
+      sumVolumeOpen += ticketInfo.volume;
+      sumPriceOpen += ticketInfo.price * ticketInfo.volume;
       m_tickets[i] = TicketInfoToString(ticketInfo);
+      activeStopNeedUpdateTP = ticketInfo.ticketId;
       break;
     }
   }
+  
+  if(beautifulEntryIndex > 2) {
+     // Giá Trung Bình = (price₁ × vol₁ + price₂ × vol₂ + ... + priceₙ × volₙ) / (vol₁ + vol₂ + ... + volₙ)
+     double averagePrice = sumPriceOpen / sumVolumeOpen;
+     double tp = CalcTP(averagePrice, sumVolumeOpen, beautifulEntryIndex);
+     for(uint i = 0; i < m_tickets.Size(); i++) {
+         TicketInfo ticketInfo = parsePrefix(m_tickets[i]);
+         if(ticketInfo.ticketId == activeStopNeedUpdateTP){
+            if(trade.OrderModify(activeStopNeedUpdateTP, ticketInfo.price, 0, tp, ORDER_TIME_GTC, 0, 0)){
+               Print("✅ đã update tp cho lệnh stop với ticket: ", ticketInfo.ticketId);
+            } else {
+               Print("❌ có lỗi khi update tp cho lệnh stop với ticket: ", ticketInfo.ticketId);
+            }
+         }
+         if(ticketInfo.state == "OPEN"){
+            if(trade.PositionModify(ticketInfo.ticketId, 0, tp)){
+               Print("✅ đã update tp cho ticket: ", ticketInfo.ticketId);
+            } else {
+               Print("❌ có lỗi khi update tp cho ticket: ", ticketInfo.ticketId);
+            }
+         }
+     }
+  }
+  
 
   // Clear lệnh xấu từ beautifulEntryIndex trở về trước => DONE
   for (int i = 1; i < beautifulEntryIndex; i++) {
@@ -189,6 +267,30 @@ void scanDailyBias() {
     }
   }
 }
+
+
+// => hàm này có vấn đề cần debug để check đúng vol
+//| Tính TP price dựa vào avgPrice, totalVol và entryIndex
+double CalcTP(double avgPrice, double totalVol, int entryIndex)
+{
+   if(totalVol <= 0.0) 
+      return EMPTY_VALUE;      // tránh chia 0
+
+   // Chọn target cent theo số entry đã vào
+   double targetCent;
+   if(entryIndex < targetByIndex1)
+      targetCent = 630;        // Case 1
+   else if(entryIndex < targetByIndex2)
+      targetCent = 720;        // Case 2
+   else
+      targetCent = 900;        // Case 3
+
+   // Chuyển cent → pip (1 pip = 1 cent = 0.01 giá)
+   double deltaP = targetCent / (totalVol * 100.0);
+
+   return (avgPrice + deltaP);
+}
+
 
 
 // Hàm tiện lợi
@@ -346,4 +448,24 @@ string ULongToString(ulong value)
   }
 
   return result;
+}
+
+//+------------------------------------------------------------------+
+//| Thêm phần tử mới vào mảng động double[]                         |
+//+------------------------------------------------------------------+
+void AddToArrayDouble(double &arr[], double valueToAdd)
+{
+   int oldSize = ArraySize(arr);
+   ArrayResize(arr, oldSize + 1);
+   arr[oldSize] = valueToAdd;
+}
+
+//+------------------------------------------------------------------+
+//| Thêm phần tử mới vào mảng động double[]                         |
+//+------------------------------------------------------------------+
+void AddToArrayString(string &arr[], string valueToAdd)
+{
+   int oldSize = ArraySize(arr);
+   ArrayResize(arr, oldSize + 1);
+   arr[oldSize] = valueToAdd;
 }
