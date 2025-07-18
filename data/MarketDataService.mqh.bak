@@ -4,7 +4,7 @@
 #include "PriceVolume.mqh"  // Lớp PriceVolume tiện ích
 
 // Khởi tạo volumes và reset trạng thái
-void InitVolumes(const double sourceVolumes[],int size,int inJump){
+void InitVolumes(const double void InitVolumes(const double sourceVolumes[]sourceVolumes[],int size,int inJump){
   jump=inJump;
   ArrayResize(m_volumes,size);
   for(int i=0;i<size;i++) m_volumes[i]=sourceVolumes[i];

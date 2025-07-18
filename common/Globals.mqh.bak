@@ -22,7 +22,7 @@ struct TicketInfo {
 
 // Cấu hình chung
 extern int    jump;
-double m_volumes[100];
+extern double m_volumes[];
 extern int    targetByIndex1;
 extern int    targetByIndex2;
 
@@ -33,7 +33,7 @@ extern double dailyBiasTP;
 extern ENUM_ORDER_TYPE orderTypeDailyBias;
 
 // Lưu trữ ticket
-TicketInfo m_tickets[100];
+extern TicketInfo m_tickets[];
 extern int        ticketCount;
 
 #endif // __GLOBALS_MQH__
