@@ -1,55 +1,62 @@
-#include <Trade\Trade.mqh>                      // Kết nối thư viện giao dịch
-#include "../common/Globals.mqh"               // Biến toàn cục và struct
-#include "../data/MarketDataService.mqh"       // Dịch vụ lấy dữ liệu giá/volume
-#include "../logic/SignalService.mqh"          // Dịch vụ sinh tín hiệu
-#include "../logic/TradeService.mqh"           // Dịch vụ đặt/đóng lệnh
-#include "../logic/TicketService.mqh"          // Dịch vụ quản lý ticket
+#include <Trade\Trade.mqh>
+#include "common/Globals.mqh"
+#include "data/MarketDataService.mqh"
+#include "logic/SignalService.mqh"
+#include "logic/TradeService.mqh"
+#include "logic/TicketService.mqh"
 
-static const double volumes1[19] = { /* volume profile 1 */ };
-static const double volumes2[10] = { /* volume profile 2 */ };
+// Profiles volumes
+static const double volumes1[19] = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,
+                                    0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03};
+static const double volumes2[10] = {0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07};
 
-int jump = 1;                  // Khoảng giá (point) để chia entry
-int targetByIndex1;            // Mốc entry 1 để tính TP
-int targetByIndex2;            // Mốc entry 2 để tính TP
-bool dailyBiasRunning = false; // Trạng thái chiến lược daily
+int jump = 1;
+int targetByIndex1, targetByIndex2;
+bool dailyBiasRunning = false;
 
-int OnInit() {
-  // Khởi tạo volumes và timer
-  if(jump==1) {
-    InitVolumes(volumes1, ArraySize(volumes1), 1);
-    targetByIndex1=12; targetByIndex2=19;
-  } else {
-    InitVolumes(volumes2, ArraySize(volumes2), 1);
-    targetByIndex1=5;  targetByIndex2=10;
-  }
-  EventSetTimer(1);   // OnTimer mỗi 1s
-  TicketInit();       // Khởi tạo theo dõi ticket
-  return INIT_SUCCEEDED;
+int OnInit()
+{
+   if(jump==1)
+   {
+      InitVolumes(volumes1, ArraySize(volumes1), 1);
+      targetByIndex1 = 12;  targetByIndex2 = 19;
+   }
+   else
+   {
+      InitVolumes(volumes2, ArraySize(volumes2), 1);
+      targetByIndex1 = 5;   targetByIndex2 = 10;
+   }
+   EventSetTimer(1);
+   TicketInit();
+   return(INIT_SUCCEEDED);
 }
 
-void OnDeinit(const int reason) {
-  EventKillTimer();   // Hủy timer khi tắt EA
+void OnDeinit(const int reason)
+{
+   EventKillTimer();
 }
 
-void OnTick() {
-  UpdateTickets();    // Cập nhật trạng thái ticket (đóng khi TP)
+void OnTick()
+{
+   UpdateTickets();
 }
 
-void OnTimer() {
-  // Thực thi theo giờ: StartDailyBias lúc 07:00, scan liên tục
-  static bool initToday=false;
-  MqlDateTime tm; TimeToStruct(TimeCurrent(), tm);
-  if(tm.hour==7 && tm.min==0 && !initToday) {
-    StartDailyBias();
-    initToday=true;
-  }
-  if(dailyBiasRunning) ScanDailyBias();
-  if(tm.hour!=7) initToday=false;
+void OnTimer()
+{
+   static bool doneToday = false;
+   MqlDateTime tm;  TimeToStruct(TimeCurrent(), tm);
+   if(tm.hour==7 && tm.min==0 && !doneToday)
+   {
+      StartDailyBias();
+      doneToday = true;
+   }
+   if(dailyBiasRunning) ScanDailyBias();
+   if(tm.hour!=7) doneToday = false;
 }
 
-void OnTradeTransaction(const MqlTradeTransaction& trans,
-                        const MqlTradeRequest& request,
-                        const MqlTradeResult& result) {
-  // Cập nhật ticket khi TP xảy ra
-  TicketOnTradeTransaction(trans, request, result);
+void OnTradeTransaction(const MqlTradeTransaction &trans,
+                        const MqlTradeRequest     &req,
+                        const MqlTradeResult      &res)
+{
+   TicketOnTradeTransaction(trans, req, res);
 }
