@@ -1,12 +1,18 @@
 #ifndef __MARKET_DATA_SERVICE_MQH__
 #define __MARKET_DATA_SERVICE_MQH__
+
 #include "../common/Globals.mqh"
 
-void InitVolumes(const double void InitVolumes(const double void InitVolumes(const double sourceVolumes[],sourceVolumes[],sourceVolumes[], int size, int inJump)
+//------------------------------------------------------------
+// InitVolumes : copy profile to global m_volumes,
+//               reset ticket array & state
+//------------------------------------------------------------
+void InitVolumes(const double &sourceVolumes[], int size, int inJump)
 {
    jump = inJump;
+
    ArrayResize(m_volumes, size);
-   for(int i=0; i<size; i++)
+   for(int i = 0; i < size; i++)
       m_volumes[i] = sourceVolumes[i];
 
    ticketCount = 0;
@@ -14,10 +20,13 @@ void InitVolumes(const double void InitVolumes(const double void InitVolumes(con
    dailyBiasRunning = false;
 }
 
+//------------------------------------------------------------
+// GetCurrentPrice : ASK for BUY, BID for SELL
+//------------------------------------------------------------
 double GetCurrentPrice(ENUM_ORDER_TYPE type)
 {
-   if(type==ORDER_TYPE_BUY)  return SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   if(type==ORDER_TYPE_SELL) return SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   if(type == ORDER_TYPE_BUY)  return(SymbolInfoDouble(_Symbol, SYMBOL_ASK));
+   if(type == ORDER_TYPE_SELL) return(SymbolInfoDouble(_Symbol, SYMBOL_BID));
    return(0.0);
 }
 

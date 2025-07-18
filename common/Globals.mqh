@@ -1,10 +1,8 @@
 #ifndef __GLOBALS_MQH__
 #define __GLOBALS_MQH__
-
 #include <Trade\Trade.mqh>
-CTrade trade;               // Đối tượng giao dịch chung
+extern CTrade trade;
 
-// Struct lưu ticket phải định nghĩa trước khi dùng m_tickets[]
 struct TicketInfo
 {
    ulong  ticketId;
@@ -14,23 +12,19 @@ struct TicketInfo
    double activePrice;
 };
 
-// Mảng dynamic, sẽ được InitVolumes() resize
-double       m_volumes[];
-TicketInfo   m_tickets[];
-int          ticketCount;
+extern double     m_volumes[];
+extern TicketInfo m_tickets[];
+extern int        ticketCount;
 
-// Các tham số chiến lược
-int    jump;
-int    targetByIndex1, targetByIndex2;
-bool   dailyBiasRunning;
-double dailyBiasSL, dailyBiasTP;
-ENUM_ORDER_TYPE orderTypeDailyBias;
+extern int    jump;
+extern int    targetByIndex1, targetByIndex2;
+extern bool   dailyBiasRunning;
+extern double dailyBiasSL, dailyBiasTP;
+extern ENUM_ORDER_TYPE orderTypeDailyBias;
 
-// Các trạng thái ticket
 #define STATE_OPEN         "OPEN"
 #define STATE_WAITING_STOP "WAITING_STOP"
 #define STATE_ACTIVE_STOP  "ACTIVE_STOP"
 #define STATE_CLOSE        "CLOSE"
 #define STATE_SKIP         "SKIP"
-
 #endif // __GLOBALS_MQH__
