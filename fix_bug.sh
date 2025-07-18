@@ -1,64 +1,39 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------
+# fix_ambiguous.sh – Xử lý lỗi “ambiguous access” do khai báo biến lặp
+# ------------------------------------------------------------------
 set -e
 
-### 1) Replace data/MarketDataService.mqh with clean version ##############
-cat > data/MarketDataService.mqh <<'EOF'
-#ifndef __MARKET_DATA_SERVICE_MQH__
-#define __MARKET_DATA_SERVICE_MQH__
+# Chọn cú pháp sed in-place tương thích macOS / Linux
+if sed --version >/dev/null 2>&1; then SED_INPLACE="sed -i"; else SED_INPLACE="sed -i ''"; fi
 
-#include "../common/Globals.mqh"
-
-//------------------------------------------------------------
-// InitVolumes : copy profile to global m_volumes,
-//               reset ticket array & state
-//------------------------------------------------------------
-void InitVolumes(const double &sourceVolumes[], int size, int inJump)
-{
-   jump = inJump;
-
-   ArrayResize(m_volumes, size);
-   for(int i = 0; i < size; i++)
-      m_volumes[i] = sourceVolumes[i];
-
-   ticketCount = 0;
-   ArrayResize(m_tickets, size);
-   dailyBiasRunning = false;
-}
-
-//------------------------------------------------------------
-// GetCurrentPrice : ASK for BUY, BID for SELL
-//------------------------------------------------------------
-double GetCurrentPrice(ENUM_ORDER_TYPE type)
-{
-   if(type == ORDER_TYPE_BUY)  return(SymbolInfoDouble(_Symbol, SYMBOL_ASK));
-   if(type == ORDER_TYPE_SELL) return(SymbolInfoDouble(_Symbol, SYMBOL_BID));
-   return(0.0);
-}
-
-#endif // __MARKET_DATA_SERVICE_MQH__
-EOF
-echo "✅ Re-written data/MarketDataService.mqh"
-
-### 2) Fix include paths inside ea/BiasBot.mq5 ###########################
+#####################################################################
+# 1) Gỡ khai báo trùng trong ea/BiasBot.mq5
+#####################################################################
 BOT="ea/BiasBot.mq5"
 cp "$BOT" "${BOT}.bak"
 
-# choose sed syntax depending on OS
-if sed --version >/dev/null 2>&1; then  # GNU sed (Linux)
-  SED_INPLACE="sed -i"
-else                                    # BSD sed (macOS)
-  SED_INPLACE="sed -i ''"
-fi
-
 $SED_INPLACE -E '
-  s#\.\./includes/Globals\.mqh#../common/Globals.mqh#;
-  s#\.\./includes/MarketDataService\.mqh#../data/MarketDataService.mqh#;
-  s#\.\./includes/SignalService\.mqh#../logic/SignalService.mqh#;
-  s#\.\./includes/TradeService\.mqh#../logic/TradeService.mqh#;
-  s#\.\./includes/TicketService\.mqh#../logic/TicketService.mqh#;
+  /^[[:space:]]*int[[:space:]]+jump[[:space:]]*=.*;/d;
+  /^[[:space:]]*bool[[:space:]]+dailyBiasRunning[[:space:]]*=?.*;/d;
+  /^[[:space:]]*int[[:space:]]+targetByIndex1[[:space:]]*[,;]/d;
+  /^[[:space:]]*int[[:space:]]+targetByIndex2[[:space:]]*[,;]/d
 ' "$BOT"
 
-echo "✅ Fixed include paths in ea/BiasBot.mq5   (backup: ${BOT}.bak)"
+echo "✅ Đã xoá khai báo trùng trong $BOT  (backup: ${BOT}.bak)"
 
-echo "🎉  Hoàn tất! Bây giờ hãy reload MetaEditor và nhấn Compile –  \
-các lỗi 'unexpected token', 'sourceVolumes', 'ambiguous access' sẽ biến mất."
+#####################################################################
+# 2) Khởi tạo biến toàn cục trong common/Globals.mqh
+#####################################################################
+GLO="common/Globals.mqh"
+cp "$GLO" "${GLO}.bak"
+
+$SED_INPLACE -E '
+  s/^[[:space:]]*int[[:space:]]+jump[[:space:]]*;[[:space:]]*$/int    jump = 1;/
+  s/^[[:space:]]*bool[[:space:]]+dailyBiasRunning[[:space:]]*;[[:space:]]*$/bool   dailyBiasRunning = false;/
+  s/^[[:space:]]*int[[:space:]]+targetByIndex1[[:space:]]*,[[:space:]]*targetByIndex2[[:space:]]*;[[:space:]]*$/int    targetByIndex1 = 0, targetByIndex2 = 0;/
+' "$GLO"
+
+echo "✅ Đã khởi tạo biến trong $GLO      (backup: ${GLO}.bak)"
+
+echo "🎉  Hoàn tất! Hãy Compile lại EA – lỗi 'ambiguous access' sẽ biến mất."

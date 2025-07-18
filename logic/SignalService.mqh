@@ -50,7 +50,7 @@ void ScanDailyBias()
    // accumulate open & active
    for(int i=0;i<ticketCount;i++)
    {
-      TicketInfo &ti = m_tickets[i];
+      TicketInfo ti = m_tickets[i];
       if(ti.state==STATE_OPEN || ti.state==STATE_ACTIVE_STOP)
       {
          totVol += ti.volume;
@@ -66,7 +66,7 @@ void ScanDailyBias()
 
    if(actIdx>=0)
    {
-      TicketInfo &ti = m_tickets[actIdx];
+      TicketInfo ti = m_tickets[actIdx];
       ti.ticketId = PlaceOrder(
          (orderTypeDailyBias==ORDER_TYPE_BUY)? ORDER_TYPE_BUY_STOP: ORDER_TYPE_SELL_STOP,
          ti.price, totVol, 0, 0
