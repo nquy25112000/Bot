@@ -1,0 +1,27 @@
+class PriceVolume : public CObject
+{
+private:
+  double m_price, m_volume;
+  ulong  m_ticketId;
+  bool   m_isOpen, m_isActiveStop;
+
+public:
+  PriceVolume(double price,double volume) {
+    m_price=price; m_volume=volume;
+    m_ticketId=-1; m_isOpen=false;
+  }
+  double Price() const { return m_price; }
+  void   SetPrice(double p) { m_price=p; }
+  double Volume() const { return m_volume; }
+  void   SetVolume(double v) { m_volume=v; }
+  ulong  TicketId() const { return m_ticketId; }
+  void   SetTicketId(ulong t) { m_ticketId=t; }
+  bool   IsOpen() const { return m_isOpen; }
+  void   SetIsOpen(bool o) { m_isOpen=o; }
+  bool   IsActiveStop() const { return m_isActiveStop; }
+  void   SetIsActiveStop(bool s) { m_isActiveStop=s; }
+  string ToString() const {
+    return StringFormat("Price: %.3f | Volume: %.3f | Ticket: %d | IsOpen: %s",
+                        m_price, m_volume, m_ticketId, m_isOpen?"true":"false");
+  }
+};
