@@ -37,3 +37,5 @@ $SED_INPLACE -E '
 echo "✅ Đã khởi tạo biến trong $GLO      (backup: ${GLO}.bak)"
 
 echo "🎉  Hoàn tất! Hãy Compile lại EA – lỗi 'ambiguous access' sẽ biến mất."
+
+# file này là để script fix bug xong chạy là nó tự apply vào code mình
