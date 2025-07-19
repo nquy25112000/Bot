@@ -23,7 +23,6 @@ string m_tickets[];
 
 int    jump = 1;
 int    targetByIndex1, targetByIndex2;
-bool   dailyBiasRunning = false;
 ENUM_ORDER_TYPE orderTypeDailyBias;
 bool dailyBiasRuning = 0;
 
