@@ -7,10 +7,11 @@
 
 int OnInit()
 {
-  if(jump==1) {
+  if (jump == 1) {
     InitVolumes(m_volumes1);
     targetByIndex1 = 12; targetByIndex2 = 19;
-  } else {
+  }
+  else {
     InitVolumes(m_volumes2);
     targetByIndex1 = 5; targetByIndex2 = 10;
   }
@@ -43,9 +44,9 @@ void OnTimer() {
   }
 }
 
-void OnTradeTransaction(const MqlTradeTransaction &trans,
-                        const MqlTradeRequest &request,
-                        const MqlTradeResult &result)
+void OnTradeTransaction(const MqlTradeTransaction& trans,
+  const MqlTradeRequest& request,
+  const MqlTradeResult& result)
 {
-   TicketOnTradeTransaction(trans, request, result);
+  TicketOnTradeTransaction(trans, request, result);
 }
