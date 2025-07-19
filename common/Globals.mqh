@@ -32,4 +32,7 @@ bool dailyBiasRuning = 0;
 #define STATE_ACTIVE_STOP  "ACTIVE_STOP"
 #define STATE_CLOSE        "CLOSE"
 #define STATE_SKIP         "SKIP"
+#define STATE_WAITING_DCA  "WAITING_DCA"
+#define STATE_ACTIVE_DCA   "ACTIVE_DCA"
+#define STATE_OPEN_DCA     "OPEN_DCA"
 #endif // __GLOBALS_MQH__
