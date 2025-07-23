@@ -84,6 +84,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
     }
     if (currentPrice <= ticketInfo.activePrice && ticketInfo.state == STATE_WAITING_STOP) {
       beautifulEntryIndex = (int)i;
+      negativeTicketIndex = beautifulEntryIndex;
       ticketInfo.ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, ticketInfo.price, totalVolume, 0, 0);
       ticketInfo.state = STATE_ACTIVE_STOP;
       ticketInfo.volume = totalVolume;

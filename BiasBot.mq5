@@ -1,21 +1,15 @@
 // Include
-#include "./common/Globals.mqh"
-#include "./data/MarketDataService.mqh"
-#include "./logic/TicketService.mqh"
-#include "./logic/TradeService.mqh"
-#include "./logic/SignalService.mqh"
-#include "./utils/GetTotalProfitFrom.mqh"
-#include "./logic//DCA_Negative/DCA_Handle.mqh"
+#include "./utils/Include.mqh"
 
 int OnInit()
 {
   if (jump == 1) {
     InitVolumes(m_volumes1);
-    targetByIndex1 = 12; targetByIndex2 = 19;
+    targetByIndex1 = 10; targetByIndex2 = 17;
   }
   else {
     InitVolumes(m_volumes2);
-    targetByIndex1 = 5; targetByIndex2 = 10;
+    targetByIndex1 = 4; targetByIndex2 = 8;
   }
   EventSetTimer(1);
   return(INIT_SUCCEEDED);
