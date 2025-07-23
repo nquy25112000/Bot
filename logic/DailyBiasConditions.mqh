@@ -80,8 +80,8 @@ BiasResult DetectDailyBias()
    }
 
    // 4 điều kiện đầu tiên bắt buộc True cho mỗi phe
-   bool mandatoryBull = bull[0] && bull[1] && bull[2] && bull[3];
-   bool mandatoryBear = bear[0] && bear[1] && bear[2] && bear[3];
+   bool mandatoryBull =  bull[2] && bull[3];
+   bool mandatoryBear =  bear[2] && bear[3];
 
    BiasResult r;
    r.bullCount    = bullTrue;
