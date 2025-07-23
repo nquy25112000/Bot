@@ -4,6 +4,7 @@
 #include "./logic/TicketService.mqh"
 #include "./logic/TradeService.mqh"
 #include "./logic/SignalService.mqh"
+#include "../utils/GetTotalProfitFrom.mqh"
 
 int OnInit()
 {
