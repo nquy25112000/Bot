@@ -1,3 +1,4 @@
+#include "utils/DailyBiasService.mqh"
 // Include
 #include "./common/Globals.mqh"
 #include "./data/MarketDataService.mqh"

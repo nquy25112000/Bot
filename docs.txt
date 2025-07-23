@@ -1,0 +1,7 @@
+| Bước | Windows (Git Bash/WSL)          | macOS                           |
+| :--: | :------------------------------ | :------------------------------ |
+|   1  | Mở Git Bash hoặc WSL            | Mở Terminal                     |
+|   2  | `cd /c/path/to/MyMQLProject`    | `cd ~/Projects/MyMQLProject`    |
+|   3  | `./script.sh`                   | `chmod +x script.sh`            |
+|   4  | *(–)*                           | `./script.sh`                   |
+|   5  | Kiểm tra `utils/` và `#include` | Kiểm tra `utils/` và `#include` |
