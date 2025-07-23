@@ -35,7 +35,7 @@ void OnTimer() {
     BiasResult biasResult = DetectDailyBias();
     PrintFormat("Bias %s – %.0f%% (Bull=%d | Bear=%d)",
                biasResult.type   ,
-               biasResult.percent, biasResult.bullCount, biasResult.bearCount);
+               biasResult.percent, biasResult.bullScore, biasResult.bearScore);
   }
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();

@@ -1,12 +1,12 @@
 //+------------------------------------------------------------------+
 //| DailyBiasConditions.mqh – Daily bias detection (XAUUSD)          |
-//| 10 pairs of Bull/Bear condition functions                        |
 //+------------------------------------------------------------------+
 #ifndef __DAILY_BIAS_CONDITIONS_MQH__
 #define __DAILY_BIAS_CONDITIONS_MQH__
 #include "CoreLogicBIAS.mqh"
 
 #property strict
+
 //--- PARAMETERS ----------------------------------------------------
 #define  EVAL_SHIFT   1                     // Always use closed candle (index 1)
 const int CONDITIONS = 10;                  // Number of Bull/Bear condition pairs
@@ -18,81 +18,74 @@ int ma50_handle = INVALID_HANDLE;
 int atr_handle  = INVALID_HANDLE;
 int adx_handle  = INVALID_HANDLE;
 
-
+//--- STRUCTURE: Bias result ----------------------------------------
 struct BiasResult
-  {
-   bool              isActiveBias;
-   string            type;
-   double            percent;
-   int               bullCount;
-   int               bearCount;
-  };
+{
+   bool    isActiveBias;
+   string  type;         // "BUY", "SELL", "NONE"
+   double  percent;      // điểm tương ứng hướng bias được chọn
+   double  bullScore;    // tổng điểm từ các điều kiện Bull
+   double  bearScore;    // tổng điểm từ các điều kiện Bear
+};
 
-//--- CONDITION FUNCTION POINTER ----------------------------------
+//--- FUNCTION POINTER STRUCTURE ------------------------------------
 typedef bool (*CondFunc)();
 
 struct CondEntry
-  {
-   CondFunc          fnBull;
-   CondFunc          fnBear;
-   bool              mandatory;
-  };
+{
+   CondFunc fnBull;
+   CondFunc fnBear;
+   bool     mandatory;
+   double   weight;
+};
 
-//--- DetectDailyBias using table-driven approach ------------------
+//--- MAIN FUNCTION -------------------------------------------------
 BiasResult DetectDailyBias()
-  {
+{
    static CondEntry conds[10] =
-     {
-        { BodyBull,           BodyBear,           false },
-        { WickBull,           WickBear,           false },
-        { VolumeBull,         VolumeBear,         false },
-        { RSIBull,            RSIBear,            false },
-        { MACDBull,           MACDBear,           false },
-        { MA50Bull,           MA50Bear,           false },
-        { PivotBreakoutBull,  PivotBreakoutBear,  false },
-        { PullbackFibBull,    PullbackFibBear,    false },
-        { TrendExpansionBull, TrendExpansionBear, false },
-        { NotExhaustionBull,  NotExhaustionBear,  false }
-     };
+   {
+      { BodyBull,           BodyBear,           false, 15 },
+      { WickBull,           WickBear,           false, 10 },
+      { VolumeBull,         VolumeBear,         false, 12 },
+      { RSIBull,            RSIBear,            false, 10 },
+      { MACDBull,           MACDBear,           false, 8  },
+      { MA50Bull,           MA50Bear,           false, 8  },
+      { PivotBreakoutBull,  PivotBreakoutBear,  false, 8  },
+      { PullbackFibBull,    PullbackFibBear,    false, 7  },
+      { TrendExpansionBull, TrendExpansionBear, false, 12 },
+      { NotExhaustionBull,  NotExhaustionBear,  false, 10 }
+   };
 
    BiasResult r;
-   r.bullCount = 0;
-   r.bearCount = 0;
-   bool mandBull = true, mandBear = true;
+   r.bullScore = 0.0;
+   r.bearScore = 0.0;
+   r.percent = 0.0;
+   r.isActiveBias = false;
+   r.type = "NONE";
 
    for(int i = 0; i < CONDITIONS; i++)
-     {
+   {
       if(conds[i].fnBull())
-         r.bullCount++;
-      else if(conds[i].mandatory)
-         mandBull = false;
+         r.bullScore += conds[i].weight;
 
       if(conds[i].fnBear())
-         r.bearCount++;
-      else if(conds[i].mandatory)
-         mandBear = false;
-     }
+         r.bearScore += conds[i].weight;
+   }
 
-   if(mandBull && r.bullCount >= 4 && r.bullCount > r.bearCount)
-     {
+   if(r.bullScore >= 55.0 && r.bullScore > r.bearScore)
+   {
       r.isActiveBias = true;
       r.type         = "BUY";
-      r.percent      = r.bullCount * 10.0;
-     }
-   else if(mandBear && r.bearCount >= 4 && r.bearCount > r.bullCount)
-     {
+      r.percent      = r.bullScore;
+   }
+   else if(r.bearScore >= 55.0 && r.bearScore > r.bullScore)
+   {
       r.isActiveBias = true;
       r.type         = "SELL";
-      r.percent      = r.bearCount * 10.0;
-     }
-   else
-     {
-      r.isActiveBias = false;
-      r.type         = "NONE";
-      r.percent      = 0.0;
-     }
+      r.percent      = r.bearScore;
+   }
 
    return r;
-  }
+}
 
 #endif // __DAILY_BIAS_CONDITIONS_MQH__

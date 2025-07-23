@@ -18,7 +18,7 @@ bool BodyCond(bool bullish)
    double l=iLow(_Symbol,PERIOD_D1,EVAL_SHIFT);
    double range=h-l; if(range<=0) return false;
    double body=MathAbs(c-o);
-   return (bullish ? (c>o) : (c<o)) && (body/range>=0.6);
+   return (bullish ? (c>o) : (c<o)) && (body/range>=0.55);
 }
 inline bool BodyBull(){return BodyCond(true);}
 inline bool BodyBear(){return BodyCond(false);}
