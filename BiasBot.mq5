@@ -23,7 +23,7 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-  
+
 }
 
 
@@ -31,10 +31,16 @@ void OnTimer() {
   datetime now = TimeCurrent();
   MqlDateTime dt;
   TimeToStruct(now, dt);
-  if (dt.hour == 7 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
+  if (dt.hour == 14 && dt.min == 0 && dt.sec == 00) {
+    BiasResult biasResult = DetectDailyBias();
+    PrintFormat("Bias %s – %.0f%% (Bull=%d | Bear=%d)",
+               biasResult.type   ,
+               biasResult.percent, biasResult.bullCount, biasResult.bearCount);
+  }
+  if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
     dailyBiasStartTime = now;
-    Print("run daily on: ", now);
+    // Print("run daily on: ", now);
   }
 
   if (dailyBiasRuning) {
