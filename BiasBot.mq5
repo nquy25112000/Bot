@@ -19,6 +19,7 @@ int OnInit()
   return(INIT_SUCCEEDED);
 }
 
+
 void OnDeinit(const int reason)
 {
 
@@ -26,7 +27,7 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-
+  
 }
 
 
@@ -34,13 +35,19 @@ void OnTimer() {
   datetime now = TimeCurrent();
   MqlDateTime dt;
   TimeToStruct(now, dt);
-  if (dt.hour == 7 && dt.min == 0 && dt.sec == 0 && dailyBiasRuning == 0) {
+  if (dt.hour == 7 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
+    dailyBiasStartTime = now;
     Print("run daily on: ", now);
   }
 
-  if (dailyBiasRuning == 1) {
+  if (dailyBiasRuning) {
     scanDailyBias();
+    double totalProfitFromStartDailyBias = GetTotalProfitFrom(dailyBiasStartTime);
+    if (totalProfitFromStartDailyBias >= targetProfitDailyBias) {
+      CloseAllOrdersAndPositions();
+      dailyBiasRuning = false;
+    }
   }
 }
 
