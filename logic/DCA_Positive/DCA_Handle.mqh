@@ -1,10 +1,6 @@
 #ifndef __DCA_HANDLE_MQH__
 #define __DCA_HANDLE_MQH__
 
-#include "../../common/Globals.mqh"
-#include "../../data/MarketDataService.mqh"
-#include "./DCA_Util.mqh"
-
 // Hàm handle lệnh DCA Dương
 // logic
 // ta có 3 điểm 3005 3006 và 3007

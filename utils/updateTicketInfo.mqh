@@ -1,8 +1,6 @@
 #ifndef __UPDATETICKETINFO_MQH__
 #define __UPDATETICKETINFO_MQH__
 
-#include "../common/Globals.mqh"
-
 // hàm update lại price khi khớp lệnh và state cho nó. bởi vì có thể trượt giá khớp lệnh
 void updateTicketInfo(ulong ticketId, double price) {
   for (uint i = 0; i < m_tickets.Size(); i++) {

@@ -1,8 +1,6 @@
 #ifndef __CALCTP_MQH__
 #define __CALCTP_MQH__
 
-#include "../common/Globals.mqh"
-
 //-------------------------------------------------------------
 // Tính toán Take Profit dựa vào:
 // - Giá trung bình các lệnh
