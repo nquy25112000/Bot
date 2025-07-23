@@ -11,7 +11,7 @@ int OnInit()
 {
   if (jump == 1) {
     InitVolumes(m_volumes1);
-    targetByIndex1 = 12; targetByIndex2 = 19;
+    targetByIndex1 = 12; targetByIndex2 = 17;
   }
   else {
     InitVolumes(m_volumes2);
