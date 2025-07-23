@@ -4,7 +4,8 @@
 #include "./logic/TicketService.mqh"
 #include "./logic/TradeService.mqh"
 #include "./logic/SignalService.mqh"
-#include "../utils/GetTotalProfitFrom.mqh"
+#include "./utils/GetTotalProfitFrom.mqh"
+#include "./logic//DCA_Negative/DCA_Handle.mqh"
 
 int OnInit()
 {
@@ -43,7 +44,7 @@ void OnTimer() {
   }
 
   if (dailyBiasRuning) {
-    scanDailyBias();
+    scanDCANegative();
     double totalProfitFromStartDailyBias = GetTotalProfitFrom(dailyBiasStartTime);
     if (totalProfitFromStartDailyBias >= targetProfitDailyBias) {
       CloseAllOrdersAndPositions();

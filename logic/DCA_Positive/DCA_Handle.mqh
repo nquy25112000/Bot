@@ -1,8 +1,8 @@
 #ifndef __DCA_HANDLE_MQH__
 #define __DCA_HANDLE_MQH__
 
-#include "../common/Globals.mqh"
-#include "../data/MarketDataService.mqh"
+#include "../../common/Globals.mqh"
+#include "../../data/MarketDataService.mqh"
 #include "./DCA_Util.mqh"
 
 // Hàm handle lệnh DCA Dương

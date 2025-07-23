@@ -1,8 +1,8 @@
 #ifndef __DCA_UTIL_MQH__
 #define __DCA_UTIL_MQH__
 
-#include "../common/Globals.mqh"
-#include "../data/MarketDataService.mqh"
+#include "../../common/Globals.mqh"
+#include "../../data/MarketDataService.mqh"
 
 // Thêm phần tử vào mảng PositiveTicket
 void AddPositiveTicketToArray(PositiveTicket& arr[], const PositiveTicket& value) {
