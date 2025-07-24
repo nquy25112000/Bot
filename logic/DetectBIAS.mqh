@@ -20,41 +20,41 @@ int adx_handle  = INVALID_HANDLE;
 
 //--- STRUCTURE: Bias result ----------------------------------------
 struct BiasResult
-{
-   bool    isActiveBias;
-   string  type;         // "BUY", "SELL", "NONE"
-   double  percent;      // điểm tương ứng hướng bias được chọn
-   double  bullScore;    // tổng điểm từ các điều kiện Bull
-   double  bearScore;    // tổng điểm từ các điều kiện Bear
-};
+  {
+   bool              isActiveBias;
+   string            type;         // "BUY", "SELL", "NONE"
+   double            percent;      // điểm tương ứng hướng bias được chọn
+   double            bullScore;    // tổng điểm từ các điều kiện Bull
+   double            bearScore;    // tổng điểm từ các điều kiện Bear
+  };
 
 //--- FUNCTION POINTER STRUCTURE ------------------------------------
 typedef bool (*CondFunc)();
 
 struct CondEntry
-{
-   CondFunc fnBull;
-   CondFunc fnBear;
-   bool     mandatory;
-   double   weight;
-};
+  {
+   CondFunc          fnBull;
+   CondFunc          fnBear;
+   bool              mandatory;
+   double            weight;
+  };
 
 //--- MAIN FUNCTION -------------------------------------------------
 BiasResult DetectDailyBias()
-{
+  {
    static CondEntry conds[10] =
-   {
-      { BodyBull,           BodyBear,           false, 15 },
-      { WickBull,           WickBear,           false, 10 },
-      { VolumeBull,         VolumeBear,         false, 12 },
-      { RSIBull,            RSIBear,            false, 10 },
-      { MACDBull,           MACDBear,           false, 8  },
-      { MA50Bull,           MA50Bear,           false, 8  },
-      { PivotBreakoutBull,  PivotBreakoutBear,  false, 8  },
-      { PullbackFibBull,    PullbackFibBear,    false, 7  },
-      { TrendExpansionBull, TrendExpansionBear, false, 12 },
-      { NotExhaustionBull,  NotExhaustionBear,  false, 10 }
-   };
+     {
+        { BodyBull,           BodyBear,           false, 15 },
+        { WickBull,           WickBear,           false, 10 },
+        { VolumeBull,         VolumeBear,         false, 12 },
+        { RSIBull,            RSIBear,            false, 10 },
+        { MACDBull,           MACDBear,           false, 8  },
+        { MA50Bull,           MA50Bear,           false, 8  },
+        { PivotBreakoutBull,  PivotBreakoutBear,  false, 8  },
+        { PullbackFibBull,    PullbackFibBear,    false, 7  },
+        { TrendExpansionBull, TrendExpansionBear, false, 12 },
+        { NotExhaustionBull,  NotExhaustionBear,  false, 10 }
+     };
 
    BiasResult r;
    r.bullScore = 0.0;
@@ -64,28 +64,39 @@ BiasResult DetectDailyBias()
    r.type = "NONE";
 
    for(int i = 0; i < CONDITIONS; i++)
-   {
+     {
       if(conds[i].fnBull())
          r.bullScore += conds[i].weight;
 
       if(conds[i].fnBear())
          r.bearScore += conds[i].weight;
-   }
+     }
 
-   if(r.bullScore >= 55.0 && r.bullScore > r.bearScore)
-   {
+   if(r.bullScore >= 40.0 || (r.bullScore > r.bearScore && r.bearScore < 10))
+     {
       r.isActiveBias = true;
       r.type         = "BUY";
       r.percent      = r.bullScore;
-   }
-   else if(r.bearScore >= 55.0 && r.bearScore > r.bullScore)
-   {
-      r.isActiveBias = true;
-      r.type         = "SELL";
-      r.percent      = r.bearScore;
-   }
+     }
+   else
+      if(r.bearScore >= 40.0 || (r.bearScore > r.bullScore && r.bullScore < 10) )
+        {
+         r.isActiveBias = true;
+         r.type         = "SELL";
+         r.percent      = r.bearScore;
+        }
+      else
+        {
+         r.bullScore = r.bearScore;
+         r.bearScore = r.bearScore;
+         r.percent = 0.0;
+         r.isActiveBias = false;
+         r.type = "NONE";
+
+        }
 
    return r;
-}
+  }
 
 #endif // __DAILY_BIAS_CONDITIONS_MQH__
+//+------------------------------------------------------------------+

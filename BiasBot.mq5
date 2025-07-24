@@ -33,9 +33,15 @@ void OnTimer() {
   TimeToStruct(now, dt);
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 00) {
     BiasResult biasResult = DetectDailyBias();
-    PrintFormat("Bias %s – %.0f%% (Bull=%d | Bear=%d)",
-               biasResult.type   ,
-               biasResult.percent, biasResult.bullScore, biasResult.bearScore);
+    if (biasResult.type == "SELL")
+        orderTypeDailyBias = ORDER_TYPE_SELL;
+     else
+        orderTypeDailyBias = ORDER_TYPE_BUY;
+     PrintFormat("DETECT BIAS %s – Bull=%d | Bear=%d (%.0f%%)",
+                 biasResult.type,          // %s  : chuỗi  BUY / SELL / NONE
+                 biasResult.bullScore,     // %d  : số nguyên
+                 biasResult.bearScore,     // %d  : số nguyên
+                 biasResult.percent);      // %.0f: làm tròn phần trăm
   }
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
