@@ -37,16 +37,15 @@ void OnTimer() {
         orderTypeDailyBias = ORDER_TYPE_SELL;
      else
         orderTypeDailyBias = ORDER_TYPE_BUY;
-     PrintFormat("DETECT BIAS %s – Bull=%d | Bear=%d (%.0f%%)",
+     PrintFormat("DETECT BIAS %s – Bull=%3f | Bear=%3f (%.0f%%)",
                  biasResult.type,          // %s  : chuỗi  BUY / SELL / NONE
-                 biasResult.bullScore,     // %d  : số nguyên
-                 biasResult.bearScore,     // %d  : số nguyên
+                 biasResult.bullScore,     // %2f  : số thực
+                 biasResult.bearScore,     // %2f  : số thực
                  biasResult.percent);      // %.0f: làm tròn phần trăm
   }
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
     dailyBiasStartTime = now;
-    // Print("run daily on: ", now);
   }
 
   if (dailyBiasRuning) {
