@@ -23,7 +23,7 @@ double CalcTP(double avgPrice, double totalVol, int entryIndex)
     targetCent = 900;
 
   double deltaP = targetCent / (totalVol * 100.0);
-  return (avgPrice + deltaP);
+  return (avgPrice + (orderTypeDailyBias == ORDER_TYPE_BUY ? deltaP : - deltaP)); 
 }
 
 #endif // __CALCTP_MQH__

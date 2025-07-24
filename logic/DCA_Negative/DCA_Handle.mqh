@@ -7,7 +7,7 @@ void initDCANegative(double currentPrice) {
     priceFirstEntryDailyBias = currentPrice;
     // Khởi tạo lệnh đầu tiên
     double tp = CalcTP(currentPrice, m_volumes[0], 0);
-    ulong ticketId = PlaceOrder(orderTypeDailyBias, currentPrice, m_volumes[0], 0, tp);
+    ulong ticketId = PlaceOrder(orderTypeDailyBias, 0.0, m_volumes[0], 0, tp);
     TicketInfo firstTicket = {
       ticketId,
       m_volumes[0],
@@ -15,6 +15,10 @@ void initDCANegative(double currentPrice) {
       currentPrice,
       0
     };
+
+    if(PositionSelectByTicket(ticketId))
+   currentPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+
     m_tickets[0] = firstTicket;
     priceFirstEntryDailyBias = currentPrice;
 
