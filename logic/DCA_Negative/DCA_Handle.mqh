@@ -7,7 +7,7 @@ void initDCANegative(double currentPrice) {
     priceFirstEntryDailyBias = currentPrice;
     // Khởi tạo lệnh đầu tiên
     double tp = CalcTP(currentPrice, m_volumes[0], 0);
-    ulong ticketId = PlaceOrder(orderTypeDailyBias, currentPrice, m_volumes[0], 0, tp);
+    ulong ticketId = PlaceOrder(orderTypeDailyBias, 0.0, m_volumes[0], 0, tp); // -> phải set lại current price
     TicketInfo firstTicket = {
       ticketId,
       m_volumes[0],
