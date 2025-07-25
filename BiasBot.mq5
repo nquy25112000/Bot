@@ -1,16 +1,9 @@
-// Include
+   // Include
 #include "./utils/Include.mqh"
 
 int OnInit()
 {
-  if (jump == 1) {
-    InitVolumes(m_volumes1);
-    targetByIndex1 = 10; targetByIndex2 = 17;
-  }
-  else {
-    InitVolumes(m_volumes2);
-    targetByIndex1 = 4; targetByIndex2 = 8;
-  }
+  InitVolumes();
   EventSetTimer(1);
   return(INIT_SUCCEEDED);
 }
