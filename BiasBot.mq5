@@ -1,4 +1,4 @@
-// Include
+   // Include
 #include "./utils/Include.mqh"
 
 int OnInit()
@@ -27,6 +27,7 @@ void OnTimer() {
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
     dailyBiasStartTime = now;
+    // Print("run daily on: ", now);
   }
 
   if (dailyBiasRuning) {
