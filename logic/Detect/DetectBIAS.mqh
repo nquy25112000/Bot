@@ -176,7 +176,7 @@ BiasResult DetectDailyBias()
       NotExhaustionBear
    };
    static bool condMandatory[10] = {
-      false, false, false, false,  // Body, Wick, Volume, RSI
+      false, false, true, false,  // Body, Wick, Volume, RSI
       false, false,            // MACD, MA50
       false, false,            // Pivot, PullbackFib
       false, false             // TrendExpansion, NotExhaustion
