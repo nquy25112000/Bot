@@ -147,69 +147,128 @@ BiasResult DetectDailyBias()
    r.patternStrength = PatternStrengthLabel(ps);
 
    // 2) Chấm điểm 10 điều kiện core  =================================
-// Dùng mảng function pointer thay vì struct chứa function pointer
-typedef bool (*CondFunc)(void);
-const int CONDITIONS = 10;
+   // Dùng mảng function pointer thay vì struct chứa function pointer
+   typedef bool (*CondFunc)(void);
+   const int CONDITIONS = 10;
 
-static CondFunc condBull[10] = {
-   BodyBull,
-   WickBull,
-   VolumeBull,
-   RSIBull,
-   MACDBull,
-   MA50Bull,
-   PivotBreakoutBull,
-   PullbackFibBull,
-   TrendExpansionBull,
-   NotExhaustionBull
-};
-static CondFunc condBear[10] = {
-   BodyBear,
-   WickBear,
-   VolumeBear,
-   RSIBear,
-   MACDBear,
-   MA50Bear,
-   PivotBreakoutBear,
-   PullbackFibBear,
-   TrendExpansionBear,
-   NotExhaustionBear
-};
-static bool condMandatory[10] = {
-   true, true, true, true,  // Body, Wick, Volume, RSI
-   false, false,            // MACD, MA50
-   false, false,            // Pivot, PullbackFib
-   false, false             // TrendExpansion, NotExhaustion
-};
-static double condWeight[10] = {
-   15, 12, 12, 12, 8, 8, 8, 8, 9, 8
-};
+   static CondFunc condBull[10] = {
+      BodyBull,
+      WickBull,
+      VolumeBull,
+      RSIBull,
+      MACDBull,
+      MA50Bull,
+      PivotBreakoutBull,
+      PullbackFibBull,
+      TrendExpansionBull,
+      NotExhaustionBull
+   };
+   static CondFunc condBear[10] = {
+      BodyBear,
+      WickBear,
+      VolumeBear,
+      RSIBear,
+      MACDBear,
+      MA50Bear,
+      PivotBreakoutBear,
+      PullbackFibBear,
+      TrendExpansionBear,
+      NotExhaustionBear
+   };
+   static bool condMandatory[10] = {
+      false, false, false, false,  // Body, Wick, Volume, RSI
+      false, false,            // MACD, MA50
+      false, false,            // Pivot, PullbackFib
+      false, false             // TrendExpansion, NotExhaustion
+   };
+   static double condWeight[10] = {
+      15, 12, 12, 12, 8, 8, 8, 8, 9, 8
+   };
+   // Tên điều kiện để debug (giữ đúng thứ tự)
+   static string condName[10] = {
+      "Body", "Wick", "Volume", "RSI",
+      "MACD", "MA50",
+      "PivotBreakout", "PullbackFib",
+      "TrendExpansion", "NotExhaustion"
+   };
 
-// Tính điểm
-double bull = 0.0, bear = 0.0;
-for(int i=0; i<CONDITIONS; i++)
-{
-   if(condBull[i]()) bull += condWeight[i];
-   if(condBear[i]()) bear += condWeight[i];
-}
+   // Self-check trọng số (in 1 lần duy nhất)
+   {
+      static bool weightChecked=false;
+      if(!weightChecked){
+         double sumW=0.0; for(int i=0;i<CONDITIONS;i++) sumW+=condWeight[i];
+         if(MathAbs(sumW-100.0)>0.001)
+            PrintFormat("[DetectDailyBias][WARN] condWeight sum != 100 (sum=%.2f)", sumW);
+         weightChecked=true;
+      }
+   }
 
-   // 3) Bonus pattern
-   bull += PatternBonusBull(ps);
-   bear += PatternBonusBear(ps);
+   // === Tính điểm + Cache kết quả cho Mandatory Gate ===
+   double bull = 0.0, bear = 0.0;
+   bool   resBull[10];
+   bool   resBear[10];
+
+   for(int i=0; i<CONDITIONS; i++)
+   {
+      bool bBull = condBull[i]();
+      bool bBear = condBear[i]();
+
+      resBull[i] = bBull;
+      resBear[i] = bBear;
+
+      if(bBull) bull += condWeight[i];
+      if(bBear) bear += condWeight[i];
+   }
+
+   // 3) Bonus pattern — có “trend factor” để tránh lệch khi thiếu trend
+   // Index 8 = TrendExpansion
+   double bonusBull = PatternBonusBull(ps);
+   double bonusBear = PatternBonusBear(ps);
+   if(!resBull[8]) bonusBull *= 0.6;  // không có TrendExpansion: giảm sức mạnh pattern
+   if(!resBear[8]) bonusBear *= 0.6;
+
+   bull += bonusBull;
+   bear += bonusBear;
 
    // 4) Ngưỡng động
    double minBuy, minSell, oppMax;
    AdjustThresholdsByPattern(ps, minBuy, minSell, oppMax);
 
-   // 5) Quyết định
+   // 5) Mandatory Gate (Mục 10): nếu bất kỳ điều kiện tiên quyết fail ⇒ hướng đó bị chặn
+   bool   mandatoryBullOK = true;
+   bool   mandatoryBearOK = true;
+   string failBull = "", failBear = "";
+
+   for(int i=0; i<CONDITIONS; i++)
+   {
+      if(condMandatory[i] && !resBull[i]){
+         mandatoryBullOK = false;
+         if(failBull!="") failBull += ", ";
+         failBull += condName[i];
+      }
+      if(condMandatory[i] && !resBear[i]){
+         mandatoryBearOK = false;
+         if(failBear!="") failBear += ", ";
+         failBear += condName[i];
+      }
+   }
+
+   // 6) Quyết định (thêm margin chênh lệch tối thiểu để tránh sát nút)
    r.bullScore = bull;
    r.bearScore = bear;
 
-   bool buyOK  = (bull >= minBuy)  && (bull > bear) && (bear < oppMax);
-   bool sellOK = (bear >= minSell) && (bear > bull) && (bull < oppMax);
+   double margin = 4.0; // có thể tinh chỉnh hoặc map theo ADX nếu muốn
 
-   if(buyOK && !sellOK){ r.type="BUY";  r.percent=bull; }
-   else if(sellOK && !buyOK){ r.type="SELL"; r.percent=bear; }
+   bool buyOK  = mandatoryBullOK && (bull >= minBuy)  && (bull > bear) && ((bull - bear) >= margin) && (bear < oppMax);
+   bool sellOK = mandatoryBearOK && (bear >= minSell) && (bear > bull) && ((bear - bull) >= margin) && (bull < oppMax);
+
+   if(!mandatoryBullOK)
+      PrintFormat("[DetectDailyBias] BUY blocked by mandatory fails: %s", failBull);
+   if(!mandatoryBearOK)
+      PrintFormat("[DetectDailyBias] SELL blocked by mandatory fails: %s", failBear);
+
+   if(buyOK && !sellOK){ r.type="BUY";  r.percent=MathMin(100.0, bull); }
+   else if(sellOK && !buyOK){ r.type="SELL"; r.percent=MathMin(100.0, bear); }
    else { r.type="NONE"; r.percent=0.0; }
 
    return r;
@@ -228,7 +287,7 @@ inline void LogDailyBias(const BiasResult &r, int tzOffsetHours=7)
                r.type,r.percent,
                r.bullScore,r.bearScore,
                r.patternName,r.patternScore,r.patternCandles,r.patternStrength,
-               countBUYBIAS, countSELLBIAS, countNONEBIAS,increseVol);
+               1, 1, 1,1);
 }
 
 #endif // __DAILY_BIAS_CONDITIONS_MQH__
