@@ -119,24 +119,21 @@ double _MarubozuShape(const CandleData &c) {
        + wick_penalty * 0.3;
 }
 double _PinBullShape(const CandleData &c) {
-  if(c.body==0.0) return 0.0;                 // <<< NEW
   bool tail_ok = (c.lower >= PIN_TAIL_MIN_FACTOR * c.body);
   bool close_top = ((c.h - c.c) <= PIN_CLOSE_ZONE * c.range);
   bool small_upper = (c.upper_ratio <= 0.25);
   if(!(tail_ok && close_top && small_upper)) return 0.0;
-  double tail_factor = Clamp((c.lower / (PIN_TAIL_MIN_FACTOR * c.body)) - 1.0, 0.0, 1.0);
+  double tail_factor = _Clamp((c.lower / (PIN_TAIL_MIN_FACTOR * c.body)) - 1.0, 0.0, 1.0);
   return 0.6 + 0.4*tail_factor;
 }
 double _PinBearShape(const CandleData &c) {
-  if(c.body==0.0) return 0.0;                 // <<< NEW
   bool tail_ok = (c.upper >= PIN_TAIL_MIN_FACTOR * c.body);
   bool close_low = ((c.c - c.l) <= PIN_CLOSE_ZONE * c.range);
   bool small_lower = (c.lower_ratio <= 0.25);
   if(!(tail_ok && close_low && small_lower)) return 0.0;
-  double tail_factor = Clamp((c.upper / (PIN_TAIL_MIN_FACTOR * c.body)) - 1.0, 0.0, 1.0);
+  double tail_factor = _Clamp((c.upper / (PIN_TAIL_MIN_FACTOR * c.body)) - 1.0, 0.0, 1.0);
   return 0.6 + 0.4*tail_factor;
 }
-
 double _InsideShape(const CandleData &c1, const CandleData &c2) {
   if(!(c1.h <= c2.h+INSIDE_EPS && c1.l >= c2.l-INSIDE_EPS)) return 0.0;
   double compress = (c1.range / c2.range);
