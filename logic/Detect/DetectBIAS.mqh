@@ -136,7 +136,7 @@ BiasResult DetectDailyBias()
    r.patternCandles=1; r.patternShift=EVAL_SHIFT; r.patternTime=0; r.patternStrength="NEUTRAL";
 
    // 1) Pattern của nến D1 đã đóng
-   PatternScore ps = AssessCandle(_Symbol, PERIOD_D1, EVAL_SHIFT);
+   PatternScore ps = AssessCandleTiered(_Symbol, PERIOD_D1, EVAL_SHIFT);
 
    r.patternId       = ps.id;
    r.patternName     = ps.name;
