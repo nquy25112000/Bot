@@ -287,7 +287,7 @@ inline void LogDailyBias(const BiasResult &r, int tzOffsetHours=7)
                r.type,r.percent,
                r.bullScore,r.bearScore,
                r.patternName,r.patternScore,r.patternCandles,r.patternStrength,
-               1, 1, 1,1);
+               countBUYBIAS, countSELLBIAS, countNONEBIAS,increseVol);
 }
 
 #endif // __DAILY_BIAS_CONDITIONS_MQH__
