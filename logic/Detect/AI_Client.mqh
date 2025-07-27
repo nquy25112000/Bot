@@ -176,6 +176,7 @@ bool CallAISupport(const string &url, const string &payload, string &outJson, in
 
    ResetLastError();
    int code = WebRequest("POST", url, headers, timeoutMs, body, result, resp_headers);
+   requestCount++;
    if(code!=200){
       PrintFormat("[AI] WebRequest fail: HTTP=%d, err=%d. Whitelist %s ?", code, GetLastError(), url);
       return false;
