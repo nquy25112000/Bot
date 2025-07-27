@@ -155,7 +155,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
   /*
   if (isUpdateTP) {
     updateTpForOpenTicket();
-  } */
+  } *
 }
 
 
