@@ -44,16 +44,16 @@ BiasResult DetectDailyBias()
   {
    static CondEntry conds[10] =
      {
-        { BodyBull,           BodyBear,           true, 15 },
-        { WickBull,           WickBear,           true, 12 },
-        { VolumeBull,         VolumeBear,         true, 12 },
-        { RSIBull,            RSIBear,            true, 12 },
+        { BodyBull,           BodyBear,           false, 15 },
+        { WickBull,           WickBear,           false, 10 },
+        { VolumeBull,         VolumeBear,         false, 12 },
+        { RSIBull,            RSIBear,            false, 10 },
         { MACDBull,           MACDBear,           false, 8  },
         { MA50Bull,           MA50Bear,           false, 8  },
         { PivotBreakoutBull,  PivotBreakoutBear,  false, 8  },
-        { PullbackFibBull,    PullbackFibBear,    false, 8  },
-        { TrendExpansionBull, TrendExpansionBear, false, 9 },
-        { NotExhaustionBull,  NotExhaustionBear,  false, 8 }
+        { PullbackFibBull,    PullbackFibBear,    false, 7  },
+        { TrendExpansionBull, TrendExpansionBear, false, 12 },
+        { NotExhaustionBull,  NotExhaustionBear,  false, 10 }
      };
 
    BiasResult r;
@@ -72,14 +72,14 @@ BiasResult DetectDailyBias()
          r.bearScore += conds[i].weight;
      }
 
-   if(r.bullScore >= 45.0 && (r.bullScore > r.bearScore && r.bearScore < 30))
+   if(r.bullScore >= 40.0 || (r.bullScore > r.bearScore && r.bearScore < 10))
      {
       r.isActiveBias = true;
       r.type         = "BUY";
       r.percent      = r.bullScore;
      }
    else
-      if(r.bearScore >= 45.0 && (r.bearScore > r.bullScore && r.bullScore < 30))
+      if(r.bearScore >= 40.0 || (r.bearScore > r.bullScore && r.bullScore < 10) )
         {
          r.isActiveBias = true;
          r.type         = "SELL";

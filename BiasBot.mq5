@@ -1,9 +1,16 @@
-   // Include
+// Include
 #include "./utils/Include.mqh"
 
 int OnInit()
 {
-  InitVolumes();
+  if (jump == 1) {
+    InitVolumes(m_volumes1);
+    targetByIndex1 = 10; targetByIndex2 = 17;
+  }
+  else {
+    InitVolumes(m_volumes2);
+    targetByIndex1 = 4; targetByIndex2 = 8;
+  }
   EventSetTimer(1);
   return(INIT_SUCCEEDED);
 }
@@ -25,9 +32,18 @@ void OnTimer() {
   MqlDateTime dt;
   TimeToStruct(now, dt);
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
+    BiasResult biasResult = DetectDailyBias();
+    if (biasResult.type == "SELL")
+        orderTypeDailyBias = ORDER_TYPE_SELL;
+     else
+        orderTypeDailyBias = ORDER_TYPE_BUY;
+     PrintFormat("DETECT BIAS %s – Bull=%d | Bear=%d (%.0f%%)",
+                 biasResult.type,          // %s  : chuỗi  BUY / SELL / NONE
+                 biasResult.bullScore,     // %d  : số nguyên
+                 biasResult.bearScore,     // %d  : số nguyên
+                 biasResult.percent);      // %.0f: làm tròn phần trăm
     startDailyBias();
     dailyBiasStartTime = now;
-    // Print("run daily on: ", now);
   }
 
   if (dailyBiasRuning) {

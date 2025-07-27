@@ -9,16 +9,24 @@ void AddPositiveTicketToArray(PositiveTicket& arr[], const PositiveTicket& value
 }
 
 // đặt lệnh STOP DCA thuận xu hướng
-void orderStopFollowTrend(double entry) {
-  double entryStop;
+ulong orderStopFollowTrend(double entry) {
+  double entryStop = orderTypeDailyBias == ORDER_TYPE_BUY ? entry + 1 : entry - 1;
+  // check xem trong mảng DCA dương có lệnh nào đang active stop với giá này không, nếu có thì không vào lệnh mà trả về ID ticket đó luôn
+  for(uint i = 0; i < m_positiveTickets.Size(); i++){
+      PositiveTicket ticket = m_positiveTickets[i];
+      if(ticket.price == entryStop && ticket.state != STATE_CLOSE){
+         return ticket.ticketId;
+      }
+  } 
+  
   ulong ticketId;
   if (orderTypeDailyBias == ORDER_TYPE_BUY) {
-    entryStop = entry + 2;
     ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, entryStop, dcaPositiveVol, 0, 0);
   } else {
-    entryStop = entry - 2;
     ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, entryStop, dcaPositiveVol, 0, 0);
   }
+ 
+  
   PositiveTicket ticket = {
      ticketId,
      dcaPositiveVol,
@@ -26,6 +34,7 @@ void orderStopFollowTrend(double entry) {
      entryStop
   };
   AddPositiveTicketToArray(m_positiveTickets, ticket);
+  return ticketId;
 }
 
 #endif // __DCA_UTIL_MQH__
