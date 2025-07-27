@@ -33,8 +33,8 @@ void handleDCAPositive(ulong ticketId) {
   for (uint i = 0; i < m_positiveTickets.Size(); i++) {
     PositiveTicket ticket = m_positiveTickets[i];
     double sl = 0;
-    if (ticket.state == STATE_OPEN_DCA && !isExistsFrozenOpen(ticket.ticketId)) { // test chỉ set sl cho những lệnh có frozen chưa OPEN -> lợi nhuận ổn định hơn. 1/1/2025 - 6/6/2025 = 76.343 đồng
-    //if (ticket.state == STATE_OPEN_DCA) { // test set SL theo logic cũ cứ khớp lệnh trên cao thì lệnh dưới thấp update lại SL dù nó đang có frozen là OPEN. 1/1/2025 - 22/04/2025 = cháy tài khoản
+    //if (ticket.state == STATE_OPEN_DCA && !isExistsFrozenOpen(ticket.ticketId)) { // test chỉ set sl cho những lệnh có frozen chưa OPEN -> lợi nhuận ổn định hơn. 1/1/2025 - 6/6/2025 = 76.343 đồng
+    if (ticket.state == STATE_OPEN_DCA) { // test set SL theo logic cũ cứ khớp lệnh trên cao thì lệnh dưới thấp update lại SL dù nó đang có frozen là OPEN. 1/1/2025 - 22/04/2025 = cháy tài khoản
       if (orderTypeDailyBias == ORDER_TYPE_BUY && ticket.price < entryToNextAction) {
         // nếu lần đầu DCA dương thì SL của từng lệnh sẽ là giá vào lệnh cộng nửa giá
         // còn nếu không phải lần đầu thì lấy giá của lệnh vừa khớp ở trên cao trừ cho nửa giá
