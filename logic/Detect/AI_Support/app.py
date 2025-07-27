@@ -11,7 +11,7 @@ from openai import OpenAI
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "8000"))
