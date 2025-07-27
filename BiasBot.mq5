@@ -31,7 +31,7 @@ void OnTimer() {
   datetime now = TimeCurrent();
   MqlDateTime dt;
   TimeToStruct(now, dt);
-  if (dt.hour == 14 && dt.min == 0 && dt.sec == 00) {
+  if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     BiasResult biasResult = DetectDailyBias();
     if (biasResult.type == "SELL")
         orderTypeDailyBias = ORDER_TYPE_SELL;
@@ -42,11 +42,8 @@ void OnTimer() {
                  biasResult.bullScore,     // %d  : số nguyên
                  biasResult.bearScore,     // %d  : số nguyên
                  biasResult.percent);      // %.0f: làm tròn phần trăm
-  }
-  if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
     dailyBiasStartTime = now;
-    // Print("run daily on: ", now);
   }
 
   if (dailyBiasRuning) {
