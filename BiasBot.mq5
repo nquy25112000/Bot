@@ -38,11 +38,6 @@ void OnTimer() {
 
   if (dailyBiasRuning) {
     scanDCANegative();
-    double totalProfitFromStartDailyBias = GetTotalProfitFrom(dailyBiasStartTime);
-    if (totalProfitFromStartDailyBias >= targetProfitDailyBias) {
-      CloseAllOrdersAndPositions();
-      dailyBiasRuning = false;
-    }
   }
 }
 

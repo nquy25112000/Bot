@@ -6,8 +6,7 @@ void initDCANegative(double currentPrice) {
     ArrayResize(m_tickets, ArraySize(m_volumes));
     priceFirstEntryDailyBias = currentPrice;
     // Khởi tạo lệnh đầu tiên
-    double tp = CalcTP(currentPrice, m_volumes[0], 0);
-    ulong ticketId = PlaceOrder(orderTypeDailyBias, 0.0, m_volumes[0], 0, tp);
+    ulong ticketId = PlaceOrder(orderTypeDailyBias, 0.0, m_volumes[0], 0, 0);
     TicketInfo firstTicket = {
       ticketId,
       m_volumes[0],
@@ -146,19 +145,6 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
        }
      }
   }
-
-  // test chạy khỏi update TP luôn vì đang gặp phải issue
-  // ở BiasBot ra điều kiện >= 900 thì đóng tất cả lệnh
-  // nhưng trong mảng DCA âm này nó chưa chạm tới điểm 11 thì nó chỉ update TP ăn 630 đồng
-  // sau khi ăn 630 đồng thì nó close tất cả các lệnh DCA âm đang mở, những điểm chưa mở ở dưới thấp hơn 11 thì vẫn còn đó
-  // ở BiasBot ra điều kiện >= 900 thì mới đóng tất cả các lệnh để đánh done cho lần bias ngày hôm đó, nó chưa đóng dẫn đến giá lại scan qua mảng DCA âm
-  // nó chạm điểm dưới thấp hơn 11 -> code update lại TP. update lại 1 lệnh với tp 720 hoặc 900 thì tp nó rất là xa, lủng logic
-  // reprodure lại bằng cách đặt 1 con bug vô Print("❌ có lỗi khi update tp cho ticket: ", ticketInfo.ticketId); rồi chạy từ 1/1/2025
-  // hoặc là phải có cơ chế đặt TP cho tất cả các lệnh cả DCA âm lẫn dương, hoặc là cứ tắt update tp cứ chạy đủ 900 thì dừng
-  /*
-  if (isUpdateTP) {
-    updateTpForOpenTicket();
-  } */
 }
 
 
