@@ -77,23 +77,3 @@ int    HEDGE_MAGIC          = 20250727;
 #define STATE_CLOSE        "CLOSE"
 
 #endif // __GLOBALS_MQH__
-
-
-
-
-
-
-
-// BUY
-// 3327
-// // 3326 -> SL = 3326.5
-// 3325 -> SL = 3325.5
-// 3324 -> SL = 3324.5
-// 3323 -> SL = 3323.5
-// 3322 -> SL = 3322.5
-// 3320 -> FROZEN SELL 3320  [khi tới entry thứ 11 thì đóng tất cả các lệnh Frozen SELL]
-// 3319
-// 3318
-// 3317
-// 3316
-// …..
