@@ -88,6 +88,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
       totalVolume = ticketInfo.volume; // nếu là active stop nghĩa là đối tượng này đã được cộng tổng vol của những đối tượng trước nó thì trả về vol
       continue;
     }
+    // nếu là BUY thì check giá hiện tại bé hơn giá active thì đặt lệnh stop, còn nếu là sell thì check giá hiện tại lớn hơn giá active
     bool checkPriceActive = orderTypeDailyBias == ORDER_TYPE_BUY ? currentPrice <= ticketInfo.activePrice : currentPrice >= ticketInfo.activePrice;
     if (checkPriceActive && ticketInfo.state == STATE_WAITING_STOP) {
       beautifulEntryIndex = (int)i;
@@ -114,7 +115,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
       double entryDCAFirstPrice = orderTypeDailyBias == ORDER_TYPE_BUY ? priceFirstEntryDailyBias + 2 : priceFirstEntryDailyBias - 2; // + 2 bởi vì entry DCA đầu tiên cách entry của lệnh đầu ngày 2 giá
       for(uint i = 0; i < m_positiveTickets.Size(); i++){
          TicketInfo ticket = m_positiveTickets[i];
-         // nếu có 1 phần tử tại (priceFirstEntryDailyBias + 2) và state nó khác close nghĩa là đang có lệnh DCA dương ở (priceFirstEntryDailyBias + 1) rồi
+         // nếu có 1 phần tử tại (priceFirstEntryDailyBias + 2) và state nó khác close nghĩa là đang có lệnh DCA dương ở (priceFirstEntryDailyBias +  2) rồi
          if(ticket.price == entryDCAFirstPrice && ticket.state != STATE_CLOSE){
             isNotExistsDCAEntry = false;
             break;
