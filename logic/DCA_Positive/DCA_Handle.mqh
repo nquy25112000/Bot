@@ -9,7 +9,7 @@
 void handleDCAPositive(ulong ticketId) {
   double entryToNextAction = 0;
   for (uint i = 0; i < m_positiveTickets.Size(); i++) {
-    PositiveTicket ticket = m_positiveTickets[i];
+    TicketInfo ticket = m_positiveTickets[i];
     if (ticket.ticketId == ticketId) {
       ticket.state = STATE_OPEN_DCA;
       m_positiveTickets[i] = ticket;
@@ -31,7 +31,7 @@ void handleDCAPositive(ulong ticketId) {
 
   // khi mảng m_positiveTickets có 2 phần tử trở lên nghĩa là lệnh cao nhất đã khớp, khớp thì dời sl lệnh thấp về giá của lệnh cao nhất - 0.5 giá
   for (uint i = 0; i < m_positiveTickets.Size(); i++) {
-    PositiveTicket ticket = m_positiveTickets[i];
+    TicketInfo ticket = m_positiveTickets[i];
     double sl = 0;
     if (ticket.state == STATE_OPEN_DCA && !isExistsFrozenOpen(ticket.ticketId)) { // test chỉ set sl cho những lệnh có frozen chưa OPEN -> lợi nhuận ổn định hơn. 1/1/2025 - 6/6/2025 = 76.343 đồng
       if (orderTypeDailyBias == ORDER_TYPE_BUY && ticket.price < entryToNextAction) {
@@ -61,9 +61,9 @@ bool checkFirstDCAPositive() {
    // check DCA lần 2 bằng cách check xem thử trong mảng còn phần tử nào có price bằng với price của lệnh đầu DCA dương đầu tiên hay k
    // nếu có thì chắc chắn giá đã từng tuột xuống dưới mảng DCA âm và đã order 1 lệnh DCA Dương lại
    // trong hàm scanDCANegative sẽ thực hiện order 1 ticket DCA dương nếu đủ điều kiện
-   PositiveTicket ticket = m_positiveTickets[0];
+   TicketInfo ticket = m_positiveTickets[0];
    for(uint i = 1; i < m_positiveTickets.Size(); i++) {
-      PositiveTicket nextTicket = m_positiveTickets[i];
+      TicketInfo nextTicket = m_positiveTickets[i];
       if(ticket.price == nextTicket.price) {
          return false;
       }
