@@ -44,35 +44,44 @@ void updateTpForOpenTicket() {
   
   
   // tính TP và update TP cho tất cả lệnh đang mở cùng chiều daily bias
-  
-  // chỉ lấy lệnh cùng chiều daily bias
-  ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
-  ENUM_ORDER_TYPE orderType = positionTypeToOrderType(positionType);
-  
+
   double sumVolumeOpen = 0; // (vol₁ + vol₂ + ... + volₙ)
   double sumPriceOpen = 0; // (price₁ × vol₁ + price₂ × vol₂ + ... + priceₙ × volₙ)
   int total = PositionsTotal();
   if(total == 0){
    return;
   }
+
   for (int i = 0; i < total; i++) {
     ulong ticket = PositionGetTicket(i);
-    if (PositionSelectByTicket(ticket) && orderType == orderTypeDailyBias) {
-      sumVolumeOpen += PositionGetDouble(POSITION_VOLUME);
-      sumPriceOpen += PositionGetDouble(POSITION_PRICE_OPEN) * PositionGetDouble(POSITION_VOLUME);
+      
+    if (PositionSelectByTicket(ticket)) {
+      ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+      ENUM_ORDER_TYPE orderType = positionTypeToOrderType(positionType);
+      // chỉ lấy lệnh cùng chiều daily bias
+      if(orderType == orderTypeDailyBias){
+         sumVolumeOpen += PositionGetDouble(POSITION_VOLUME);
+         sumPriceOpen += PositionGetDouble(POSITION_PRICE_OPEN) * PositionGetDouble(POSITION_VOLUME);
+      }
+      
     }
   }
   
   double averagePrice = sumPriceOpen / sumVolumeOpen;
   double tp = CalcTP(averagePrice, sumVolumeOpen, negativeTicketIndex);
   
-  PrintFormat("giá trung bình %.3f | tổng vol %.2f | tp %.3f | tổng tiền %.2f", averagePrice, sumVolumeOpen, tp, (averagePrice - tp) * sumVolumeOpen * 100);
-  Print("done");
+  
   for (int i = 0; i < total; i++) {
     ulong ticket = PositionGetTicket(i);
-    if (PositionSelectByTicket(ticket) && orderType == orderTypeDailyBias) {
-      double old_sl = PositionGetDouble(POSITION_SL);
-      trade.PositionModify(ticket, old_sl, tp);
+    
+    if (PositionSelectByTicket(ticket)) {
+      ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+      ENUM_ORDER_TYPE orderType = positionTypeToOrderType(positionType);
+      // chỉ lấy lệnh cùng chiều daily bias
+      if(orderType == orderTypeDailyBias){
+         double old_sl = PositionGetDouble(POSITION_SL);
+         trade.PositionModify(ticket, old_sl, tp);
+      }
     }
   }
 }
