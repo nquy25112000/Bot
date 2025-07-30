@@ -311,3 +311,87 @@ void DecideAllocations(const double adx, const double atr_usd,
   allocMomentum = m;
   allocTunnel   = MathMax(0.0, 1.0 - m);
 }
+//---------------- (8) GUARDS / CAPS ------------------------------//
+// (8a) Đếm pending theo prefix (trên symbol hiện tại)
+int CountPendingByPrefix(const string &prefix){
+  int cnt=0; int total=OrdersTotal();
+  for(int i=0;i<total;i++){
+    if(!OrderSelect(i, SELECT_BY_INDEX)) continue;
+    if(OrderGetString(ORDER_SYMBOL)!=_Symbol) continue;
+    string cmt=OrderGetString(ORDER_COMMENT);
+    if(StringFind(cmt, prefix)==0) cnt++;
+  }
+  return cnt;
+}
+// (8b) Tổng lots pending theo prefix
+double PendingLotsByPrefix(const string &prefix){
+  double sum=0.0; int total=OrdersTotal();
+  for(int i=0;i<total;i++){
+    if(!OrderSelect(i, SELECT_BY_INDEX)) continue;
+    if(OrderGetString(ORDER_SYMBOL)!=_Symbol) continue;
+    string cmt=OrderGetString(ORDER_COMMENT);
+    if(StringFind(cmt, prefix)==0) sum += OrderGetDouble(ORDER_VOLUME_CURRENT);
+  }
+  return sum;
+}
+// (8c) Dedupe pending theo key R-L
+bool PendingExistsKey(const string &prefix, int roundIdx, int legIdx){
+  string key=StringFormat("%s|", prefix);
+  string tail=StringFormat("|R%d-L%d", roundIdx, legIdx);
+  int total=OrdersTotal();
+  for(int i=0;i<total;i++){
+    if(!OrderSelect(i, SELECT_BY_INDEX)) continue;
+    if(OrderGetString(ORDER_SYMBOL)!=_Symbol) continue;
+    string cmt=OrderGetString(ORDER_COMMENT);
+    if(StringFind(cmt, key)==0 && StringFind(cmt, tail)>=0) return true;
+  }
+  return false;
+}
+// (8d) Hủy pending quá TTL (giây)
+int CancelExpiredPendingsByPrefix(CTrade &trade, const string &prefix, int ttl_seconds){
+  int killed=0; datetime now=TimeCurrent(); int total=OrdersTotal();
+  for(int i=total-1;i>=0;--i){
+    if(!OrderSelect(i, SELECT_BY_INDEX)) continue;
+    if(OrderGetString(ORDER_SYMBOL)!=_Symbol) continue;
+    string cmt=OrderGetString(ORDER_COMMENT);
+    if(StringFind(cmt, prefix)!=0) continue;
+    datetime t0=(datetime)OrderGetInteger(ORDER_TIME_SETUP);
+    if(ttl_seconds>0 && (now - t0) >= ttl_seconds){
+      ulong tk=(ulong)OrderGetInteger(ORDER_TICKET);
+      if(trade.OrderDelete(tk)) killed++;
+    }
+  }
+  return killed;
+}
+// (8e) Ước lượng margin/lot & số lot thêm cho phép để giữ margin level ≥ target
+double EstimateAdditionalLotsByMargin(double targetMinMarginLevelPct){
+  double eq=AccountInfoDouble(ACCOUNT_EQUITY);
+  double curMargin=AccountInfoDouble(ACCOUNT_MARGIN);
+  double allowMargin = (targetMinMarginLevelPct>0 ? (eq * 100.0 / targetMinMarginLevelPct) : DBL_MAX);
+  double addMargin   = MathMax(0.0, allowMargin - curMargin);
+  // margin/lot (ước lượng theo BUY 1.0 lot @Bid)
+  double bid=SymbolInfoDouble(_Symbol, SYMBOL_BID), marginPerLot=0.0;
+  if(!OrderCalcMargin(ORDER_TYPE_BUY, _Symbol, 1.0, bid, marginPerLot)) return 0.0;
+  if(marginPerLot<=0.0) return 0.0;
+  return addMargin / marginPerLot; // lots có thể thêm mà vẫn giữ >= target ML
+}
+// (8f) Net lots mở theo prefix tổng "HEDGE_" (positions + pending)
+double HedgeOpenLots(){ return TotalLotsByPrefix("HEDGE_") + PendingLotsByPrefix("HEDGE_"); }
+// (8g) Hiệu lực delta xấp xỉ (BUY lots - SELL lots + pending BUY - pending SELL)
+double EffectiveDeltaLots(){
+  double buy=0, sell=0;
+  for(int i=PositionsTotal()-1;i>=0;--i){
+    if(!PositionSelectByIndex(i)) continue; if(PositionGetString(POSITION_SYMBOL)!=_Symbol) continue;
+    long t=(long)PositionGetInteger(POSITION_TYPE); double v=PositionGetDouble(POSITION_VOLUME);
+    if(t==POSITION_TYPE_BUY) buy+=v; else if(t==POSITION_TYPE_SELL) sell+=v;
+  }
+  // pending
+  int total=OrdersTotal();
+  for(int i=0;i<total;i++){
+    if(!OrderSelect(i, SELECT_BY_INDEX)) continue; if(OrderGetString(ORDER_SYMBOL)!=_Symbol) continue;
+    ENUM_ORDER_TYPE ty=(ENUM_ORDER_TYPE)OrderGetInteger(ORDER_TYPE); double v=OrderGetDouble(ORDER_VOLUME_CURRENT);
+    if(ty==ORDER_TYPE_BUY_LIMIT || ty==ORDER_TYPE_BUY_STOP || ty==ORDER_TYPE_BUY_STOP_LIMIT) buy+=v;
+    else if(ty==ORDER_TYPE_SELL_LIMIT || ty==ORDER_TYPE_SELL_STOP || ty==ORDER_TYPE_SELL_STOP_LIMIT) sell+=v;
+  }
+  return buy - sell; // dương = bias BUY; âm = bias SELL
+}
