@@ -1,20 +1,21 @@
 //==============================================================
-// Hedging_Hybrid_Dynamic.mqh  –  Dynamic Tunnel + Momentum (MQL5)
-// Tác giả: vmax x ChatGPT
-// Ngày:    2025-07-30
+// Hedging_Hybrid_Dynamic.mqh  – Dynamic Tunnel + Momentum (MQL5)
 //==============================================================
 #property strict
+#ifndef __HEDGING_HYBRID_DYNAMIC_MQH__
+#define __HEDGING_HYBRID_DYNAMIC_MQH__
+
 #include <Trade/Trade.mqh>
-#include "HedgeHelpers.mqh"
+#include "Helper_Hybrid.mqh"  // dùng bản helper ở trên
 
 #ifndef HEDGE_MAGIC
-  #define HEDGE_MAGIC 20250727
+#define HEDGE_MAGIC 20250727
 #endif
 
 //======================= CẤU HÌNH ==============================//
 struct TriggerCfg {
   bool   useBreakNoPullback;  double breakUnder_usd; double noPullback_usd; int noPullbackBars;
-  int    minMarginLevelPct;   // emergency bật hedge
+  int    minMarginLevelPct;
   bool   useADX; int adxPeriod; ENUM_TIMEFRAMES adxTF; double adxHigh; double adxLow;
   bool   useATR; int atrPeriod; ENUM_TIMEFRAMES atrTF; double momSL_ATR_mult; double atrSideway_usd;
   double maxSpread_usd;
@@ -32,18 +33,18 @@ struct HybridCfg {
 
   // TP gộp
   double tpMomCents; double tpTunCents; double tpAllCents; bool tpPerLot;
-  double tpMinMoney;        // *** mới: sàn tiền tối thiểu (USD/đv account) cho TP gộp
-  double trailingLockPct;   // *** mới: khoá lợi nhuận theo % peak (0.0 = tắt)
+  double tpMinMoney;
+  double trailingLockPct;
 
   // GUARDS/CAPS
-  double maxLotsMultiplierNet;   // *** mới: cap lots tổng = k * netAbsVol (mặc định 1.2)
-  double placeMinMarginLevelPct; // *** mới: ML tối thiểu để CHO PHÉP đặt thêm (vd 450%)
-  int    maxPending;             // *** mới: số pending tối đa cho prefix "HEDGE_"
-  int    pendingTTLsec;          // *** mới: TTL pending (giây)
-  bool   sellOnlyOnStrongTrend;  // *** mới: trend mạnh tự động BUY=0 cho Tunnel
+  double maxLotsMultiplierNet;
+  double placeMinMarginLevelPct;
+  int    maxPending;
+  int    pendingTTLsec;
+  bool   sellOnlyOnStrongTrend;
 };
 
-//------------------ DEFAULT CONFIGS (gợi ý cho 10,000 cent & 1:500) ----//
+//------------------ DEFAULT CONFIGS ----------------------------//
 TriggerCfg DefaultTriggerCfg(){
   TriggerCfg tg;
   tg.useBreakNoPullback=true; tg.breakUnder_usd=1.0; tg.noPullback_usd=0.8; tg.noPullbackBars=4;
@@ -53,6 +54,7 @@ TriggerCfg DefaultTriggerCfg(){
   tg.maxSpread_usd=0.30;
   return tg;
 }
+
 HybridCfg DefaultHybridCfg(){
   HybridCfg cfg;
   cfg.allocMomentum=0.60; cfg.allocTunnel=0.40; cfg.tunnelSellShare=0.75;
@@ -63,27 +65,36 @@ HybridCfg DefaultHybridCfg(){
   cfg.momSL_ATR_mult=1.2;
 
   cfg.tpMomCents=450; cfg.tpTunCents=300; cfg.tpAllCents=600; cfg.tpPerLot=true;
-  cfg.tpMinMoney=1.50;          // sàn ~ $1.50 (cent account vẫn là đơn vị tiền account)
-  cfg.trailingLockPct=0.35;     // khoá 35% lợi nhuận nếu đã vượt target
+  cfg.tpMinMoney=1.50;
+  cfg.trailingLockPct=0.35;
 
-  cfg.maxLotsMultiplierNet=1.2; // tổng hedge ≤ 1.2 × netAbsVol
-  cfg.placeMinMarginLevelPct=450; // chỉ đặt thêm nếu ML dự kiến ≥ 450%
+  cfg.maxLotsMultiplierNet=1.2;
+  cfg.placeMinMarginLevelPct=450;
   cfg.maxPending=10;
-  cfg.pendingTTLsec=1800;       // 30 phút
+  cfg.pendingTTLsec=1800;
   cfg.sellOnlyOnStrongTrend=true;
   return cfg;
 }
 
-//================== HÀM CHÍNH – HYBRID DYNAMIC ==================//
-void Hedging_Hybrid_Dynamic(string listState[], int nStates,
-                            const TriggerCfg &tg, HybridCfg cfg)
+//------------------ TIỆN ÍCH NỘI BỘ ---------------------------//
+double TargetMoneyFn(const HybridCfg &cfg, double cents, double lots)
+{
+  if(cents<=0) return 0.0;
+  double l = (cfg.tpPerLot ? lots : 1.0);
+  double v = CentsToMoney(cents, l);
+  return MathMax(v, cfg.tpMinMoney);
+}
+
+//================== HÀM CHÍNH – HYBRID DYNAMIC =================//
+void Hedging_Hybrid_Dynamic(string &listState[], int nStates,
+                            const TriggerCfg &tg, HybridCfg &cfg)
 {
   // [G0] Vệ sinh pending cũ & guard spread
   CTrade trade;
-  if(cfg.pendingTTLsec>0) CancelExpiredPendingsByPrefix(trade, "HEDGE_", cfg.pendingTTLsec);  // (8d)
-  if(tg.maxSpread_usd > 0 && !SpreadOK(tg.maxSpread_usd)){ Print("[HEDGE] Spread lớn, hoãn."); return; } // (2c)
+  if(cfg.pendingTTLsec>0) CancelExpiredPendingsByPrefix(trade, "HEDGE_", cfg.pendingTTLsec);
+  if(tg.maxSpread_usd > 0 && !SpreadOK(tg.maxSpread_usd)){ Print("[HEDGE] Spread lớn, hoãn."); return; }
 
-  // [S1] Scan cụm vé theo COMMENT (4c)
+  // [S1] Scan cụm vé theo COMMENT
   double netAvg=0, netAbsVol=0, buyVol=0, sellVol=0, avgBuy=0, avgSell=0;
   bool haveLatest=false; string latestSide=""; double latestPrice=0, latestVolAbs=0;
   bool haveNet = ComputeNetAndLatestByState(listState, nStates,
@@ -96,16 +107,19 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
 
   // [T1] Triggers
   bool priceGate = (!tg.useBreakNoPullback) ? true
-                   : BrokeUnderNoPullback(tg.breakUnder_usd, tg.noPullback_usd, tg.noPullbackBars, tg.atrTF);  // (4a)
+                   : BrokeUnderNoPullback(tg.breakUnder_usd, tg.noPullback_usd, tg.noPullbackBars, tg.atrTF);
   bool accountGate=false;
-  if(tg.minMarginLevelPct>0){ int ml=(int)AccountInfoInteger(ACCOUNT_MARGIN_LEVEL); if(ml>0 && ml<=tg.minMarginLevelPct) accountGate=true; }
+  if(tg.minMarginLevelPct>0){
+    double ml = AccountInfoDouble(ACCOUNT_MARGIN_LEVEL); // MQL5: double
+    if(ml>0 && ml<=tg.minMarginLevelPct) accountGate=true;
+  }
 
-  double adx = tg.useADX ? SafeADX(tg.adxTF, tg.adxPeriod) : 0.0;   // (3b)
-  double atr = tg.useATR ? SafeATR(tg.atrTF, tg.atrPeriod) : 0.0;   // (3a)
+  double adx = tg.useADX ? SafeADX(tg.adxTF, tg.adxPeriod) : 0.0;
+  double atr = tg.useATR ? SafeATR(tg.atrTF, tg.atrPeriod) : 0.0;
 
   if(!(priceGate || accountGate)){ Print("[HEDGE] Trigger chưa đạt."); return; }
 
-  // [A1] Phân bổ động (7a)
+  // [A1] Phân bổ động
   DecideAllocations(adx, atr, tg.useADX, tg.adxHigh, tg.adxLow, tg.useATR, tg.atrSideway_usd,
                     cfg.allocMomentum, cfg.allocTunnel);
 
@@ -120,12 +134,11 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
   // [CAP1] Tổng cap lots theo netAbsVol
   double capByNet = cfg.maxLotsMultiplierNet * netAbsVol;
 
-  // [CAP2] Cap theo Margin dự kiến (8e)
-  double addLotsByMargin = EstimateAdditionalLotsByMargin(cfg.placeMinMarginLevelPct);
-  double alreadyHedgeLots = HedgeOpenLots(); // (8f)
-  double maxLotsAllowed = MathMax(0.0, capByNet); // base
-  // Cho phép tổng hedge ≤ min(capByNet, already + addByMargin)
-  maxLotsAllowed = MathMin(maxLotsAllowed, alreadyHedgeLots + addLotsByMargin);
+  // [CAP2] Cap theo Margin dự kiến
+  double addLotsByMargin   = EstimateAdditionalLotsByMargin(cfg.placeMinMarginLevelPct);
+  double alreadyHedgeLots  = HedgeOpenLots();
+  double maxLotsAllowed    = MathMax(0.0, capByNet);
+  maxLotsAllowed           = MathMin(maxLotsAllowed, alreadyHedgeLots + addLotsByMargin);
 
   // [CAP3] Max pending
   int curPending = CountPendingByPrefix("HEDGE_");
@@ -155,16 +168,16 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
   double volT_sell=ClampLot(baseVolTunnel * cfg.tunnelSellShare);
   double volT_buy =ClampLot(MathMax(0.0, baseVolTunnel - volT_sell));
 
-  // Dedupe R-L tránh lặp
+  // Dedupe R-L (tách key SELL/BUY)
   if(volT_sell>0 && !PendingExistsKey("HEDGE_TUN",1,1)){
     double e=lower, sl=upper, tp=Nd(lower - cfg.D_TP_usd);
     if(CountPendingByPrefix("HEDGE_") < cfg.maxPending)
       PlaceSellStopPrefix(trade, HEDGE_MAGIC, volT_sell, e, sl, tp, "HEDGE_TUN", 1, 1);
   }
-  if(volT_buy>0 && !PendingExistsKey("HEDGE_TUN",1,1)){ // cùng R-L cho BUY trong Tunnel
+  if(volT_buy>0 && !PendingExistsKey("HEDGE_TUN",1,2)){
     double e=upper, sl=lower, tp=Nd(upper + cfg.D_TP_usd);
     if(CountPendingByPrefix("HEDGE_") < cfg.maxPending)
-      PlaceBuyStopPrefix(trade, HEDGE_MAGIC, volT_buy, e, sl, tp, "HEDGE_TUN", 1, 1);
+      PlaceBuyStopPrefix(trade, HEDGE_MAGIC, volT_buy, e, sl, tp, "HEDGE_TUN", 1, 2);
   }
 
   // [MOM] Momentum SELL ladder
@@ -183,10 +196,10 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
     // Dedupe 1-1: HEDGE_MOM|SELL|R1-Li
     if(PendingExistsKey("HEDGE_MOM",1,i+1)) continue;
 
-    // CAP theo effective delta: không để bias SELL vượt quá capByNet
-    double effDelta = EffectiveDeltaLots(); // dương=BUY, âm=SELL (8g)
-    double futureDelta = effDelta - vol;    // đặt SELL làm delta âm hơn
-    if(MathAbs(futureDelta) > capByNet){ continue; } // bỏ leg nếu vượt
+    // CAP theo effective delta
+    double effDelta = EffectiveDeltaLots(); // dương=BUY, âm=SELL
+    double futureDelta = effDelta - vol;
+    if(MathAbs(futureDelta) > capByNet){ continue; }
 
     double entry=Nd(lastLow - cfg.momOffsets_usd[i]);
     double sl=Nd(entry + slDist);
@@ -195,20 +208,23 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
   }
 
   // [TP] TP gộp + trailing lock
-  double lotsM = TotalLotsByPrefix("HEDGE_MOM"), lotsT = TotalLotsByPrefix("HEDGE_TUN"), lotsAll = TotalLotsByPrefix("HEDGE_");
-  auto TargetMoney = [&](double cents, double lots){ double v = (cfg.tpPerLot? CentsToMoney(cents, lots) : CentsToMoney(cents, 1.0)); return MathMax(v, cfg.tpMinMoney); };
+  double lotsM  = TotalLotsByPrefix("HEDGE_MOM");
+  double lotsT  = TotalLotsByPrefix("HEDGE_TUN");
+  double lotsAll= TotalLotsByPrefix("HEDGE_");
 
   static double peakMom=0, peakTun=0, peakAll=0;
-  double pnlMom=GroupProfitByPrefix("HEDGE_MOM"), pnlTun=GroupProfitByPrefix("HEDGE_TUN"), pnlAll=GroupProfitByPrefix("HEDGE_");
+  double pnlMom=GroupProfitByPrefix("HEDGE_MOM");
+  double pnlTun=GroupProfitByPrefix("HEDGE_TUN");
+  double pnlAll=GroupProfitByPrefix("HEDGE_");
 
-  double targMom=TargetMoney(cfg.tpMomCents, lotsM);
-  double targTun=TargetMoney(cfg.tpTunCents, lotsT);
-  double targAll=TargetMoney(cfg.tpAllCents, lotsAll);
+  double targMom = TargetMoneyFn(cfg, cfg.tpMomCents, lotsM);
+  double targTun = TargetMoneyFn(cfg, cfg.tpTunCents, lotsT);
+  double targAll = TargetMoneyFn(cfg, cfg.tpAllCents, lotsAll);
 
-  // Update peaks
-  peakMom = MathMax(peakMom, pnlMom); peakTun=MathMax(peakTun,pnlTun); peakAll=MathMax(peakAll,pnlAll);
+  peakMom = MathMax(peakMom, pnlMom);
+  peakTun = MathMax(peakTun, pnlTun);
+  peakAll = MathMax(peakAll, pnlAll);
 
-  // Close logic: đạt target → đóng ngay; nếu đã vượt target và quay đầu > trailing → đóng bảo toàn
   if(cfg.tpMomCents>0 && targMom>0){
     if(pnlMom >= targMom) CloseAllByPrefix(trade, "HEDGE_MOM");
     else if(cfg.trailingLockPct>0 && peakMom>=targMom && pnlMom <= peakMom*(1.0 - cfg.trailingLockPct))
@@ -225,3 +241,7 @@ void Hedging_Hybrid_Dynamic(string listState[], int nStates,
       CloseAllByPrefix(trade, "HEDGE_");
   }
 }
+
+
+
+#endif // __HEDGING_HYBRID_DYNAMIC_MQH__

@@ -1,4 +1,4 @@
-   // Include
+// Include
 #include "./utils/Include.mqh"
 
 int OnInit()
@@ -34,6 +34,16 @@ void OnTimer() {
   if (dt.hour == 14 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startDailyBias();
     dailyBiasStartTime = now;
+  }
+
+double pnl = AccountInfoDouble(ACCOUNT_EQUITY) - AccountInfoDouble(ACCOUNT_BALANCE);
+  if (pnl < -950.0)
+  {
+    static TriggerCfg TG = DefaultTriggerCfg();
+    static HybridCfg  CFG = DefaultHybridCfg();
+
+    string states[] = { STATE_OPEN }; // hoặc {"*"} nếu muốn gom tất cả comment
+    Hedging_Hybrid_Dynamic(states, ArraySize(states), TG, CFG);
   }
 
   if (dailyBiasRuning) {
