@@ -2,7 +2,7 @@
 #define __DAILY_BIAS_CONDITIONS_FUNCS_MQH__
 #property strict
 #include <Trade\SymbolInfo.mqh>
-#include "../common/Globals.mqh"
+#include "../../common/Globals.mqh"
 
 #define  EVAL_SHIFT   1      // luôn dùng nến đã đóng (index 1)
 
