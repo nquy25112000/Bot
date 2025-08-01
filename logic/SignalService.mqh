@@ -5,28 +5,18 @@
 // Khởi động chiến lược Daily Bias:
 // Tạo lệnh đầu tiên và thiết lập các lệnh chờ (trạng thái WAITING_STOP)
 //-------------------------------------------------------------
-void startDailyBias() {
-   BiasResult biasResult = DetectDailyBias();
-   if (biasResult.type == "SELL"){
-     orderTypeDailyBias = ORDER_TYPE_SELL;
-   } else {
-     orderTypeDailyBias = ORDER_TYPE_BUY;
-   }
-   PrintFormat("DETECT BIAS %s – Bull=%d | Bear=%d (%.0f%%)",
-                 biasResult.type,          // %s  : chuỗi  BUY / SELL / NONE
-                 biasResult.bullScore,     // %d  : số nguyên
-                 biasResult.bearScore,     // %d  : số nguyên
-                 biasResult.percent);      // %.0f: làm tròn phần trăm
+void startBias(string biasType) {
+   
+  setOrderTypeByBiasType(biasType);
   dailyBiasRuning = true;
-  double currentPrice = getCurrentPrice(orderTypeDailyBias);
+  ENUM_ORDER_TYPE orderTypeByBiasType = getOrderTypeByBiasType(biasType);
+  double currentPrice = getCurrentPrice(orderTypeByBiasType);
   // clear toàn bộ data cũ
-  ArrayFree(m_tickets);
-  ArrayFree(m_positiveTickets);
-  ArrayFree(m_frozenTickets);
+  clearDataByType(biasType);
   // Khởi tạo lệnh STOP cách lệnh đầu tiên 2 giá thuận xu hướng
-  orderStopFollowTrend(orderTypeDailyBias == ORDER_TYPE_BUY ? currentPrice + 1: currentPrice - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền currentPrice + 1
+  //orderStopFollowTrend(orderTypeByBiasType == ORDER_TYPE_BUY ? currentPrice + 1: currentPrice - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền currentPrice + 1
   // Khởi tạo DCA âm
-  initDCANegative(currentPrice);
+  initDCANegative(biasType);
 }
 
 #endif // __SIGNAL_SERVICE_MQH__
