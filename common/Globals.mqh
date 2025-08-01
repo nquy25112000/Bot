@@ -18,20 +18,20 @@ struct TicketInfo
 
 struct BiasResult
 {
-   // Kết quả bias cuối cùng
-   string  type;            // "BUY" | "SELL" | "NONE"
-   double  percent;         // điểm hướng thắng (sau pattern bonus)
-   double  bullScore;       // tổng điểm Bull
-   double  bearScore;       // tổng điểm Bear
+  // Kết quả bias cuối cùng
+  string  type;            // "BUY" | "SELL" | "NONE"
+  double  percent;         // điểm hướng thắng (sau pattern bonus)
+  double  bullScore;       // tổng điểm Bull
+  double  bearScore;       // tổng điểm Bear
 
-   // Snapshot CandlePattern của nến D1 đã đóng (shift=EVAL_SHIFT)
-   int     patternId;       // enum CandlePattern
-   string  patternName;     // ví dụ "Bullish Engulfing"
-   double  patternScore;    // 0..100
-   int     patternCandles;  // 1 / 2 / 3 / 5
-   int     patternShift;    // thường = EVAL_SHIFT (1)
-   datetime patternTime;    // open time nến D1 tại shift
-   string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
+  // Snapshot CandlePattern của nến D1 đã đóng (shift=EVAL_SHIFT)
+  int     patternId;       // enum CandlePattern
+  string  patternName;     // ví dụ "Bullish Engulfing"
+  double  patternScore;    // 0..100
+  int     patternCandles;  // 1 / 2 / 3 / 5
+  int     patternShift;    // thường = EVAL_SHIFT (1)
+  datetime patternTime;    // open time nến D1 tại shift
+  string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
 };
 
 
@@ -44,9 +44,9 @@ double targetProfitDailyBias = 900;
 
 // dailyBiasNegativeVolume danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 double dailyBiasNegativeVolume[19] = { 0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
-// mảng 10 phần tử để test                                   
+// mảng 10 phần tử để test
 // static const double dailyBiasNegativeVolume[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
-                                    
+
 double h4BiasNegativeVolume[];
 double h1BiasNegativeVolume[];
 
@@ -73,6 +73,11 @@ ulong h1BiasTicketIds[];
 // targetByIndex để xác định nó đang ở vị trí bao nhiêu trong dailyBiasNegativeVolume, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác
 int    targetByIndex1, targetByIndex2;
 
+int totalSell = 0;
+int totalBuy = 0;
+int totalNone = 0;
+int lastLoggedDay = -1;
+
 // orderTypeDailyBias biến khởi tạo đẻ xác định hôm nay đánh bài nào
 ENUM_ORDER_TYPE orderTypeDailyBias;
 ENUM_ORDER_TYPE orderTypeH4Bias;
@@ -94,7 +99,7 @@ double priceFirstEntryh1Bias;
 double dcaPositiveVolH1 = 0.1;
 
 string HEDGE_COMMENT_PREFIX = "HEDGE";
-int    HEDGE_MAGIC          = 20250727;
+int    HEDGE_MAGIC = 20250727;
 
 // dành cho DCA âm
 #define STATE_OPEN         "OPEN"
