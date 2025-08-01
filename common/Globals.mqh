@@ -16,6 +16,24 @@ struct TicketInfo
   ulong             frozenByTicketId;
 };
 
+struct BiasResult
+{
+   // Kết quả bias cuối cùng
+   string  type;            // "BUY" | "SELL" | "NONE"
+   double  percent;         // điểm hướng thắng (sau pattern bonus)
+   double  bullScore;       // tổng điểm Bull
+   double  bearScore;       // tổng điểm Bear
+
+   // Snapshot CandlePattern của nến D1 đã đóng (shift=EVAL_SHIFT)
+   int     patternId;       // enum CandlePattern
+   string  patternName;     // ví dụ "Bullish Engulfing"
+   double  patternScore;    // 0..100
+   int     patternCandles;  // 1 / 2 / 3 / 5
+   int     patternShift;    // thường = EVAL_SHIFT (1)
+   datetime patternTime;    // open time nến D1 tại shift
+   string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
+};
+
 
 // thời gian start daily bias. dùng để xác định thời gian bắt đầu của 1 lần chạy daily để tính toán lợi nhuận từ thời điểm start đến hiện tại
 datetime dailyBiasStartTime;

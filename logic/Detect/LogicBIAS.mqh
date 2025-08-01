@@ -1,8 +1,9 @@
-#ifndef __DAILY_BIAS_CONDITIONS_FUNCS_MQH__
-#define __DAILY_BIAS_CONDITIONS_FUNCS_MQH__
+#ifndef __DAILY_BIAS_LOGIC_MQH__
+#define __DAILY_BIAS_LOGIC_MQH__
 #property strict
-#include <Trade\SymbolInfo.mqh>
+#include <Trade/SymbolInfo.mqh>
 #include "../../common/Globals.mqh"
+#include "CandlePattern.mqh"
 
 #define  EVAL_SHIFT   1      // luôn dùng nến đã đóng (index 1)
 
@@ -203,4 +204,4 @@ bool NotExhaustionBear()
    return !(body/range < 0.3 && lower/range > 0.6);
 }
 
-#endif // __DAILY_BIAS_CONDITIONS_FUNCS_MQH__
+#endif // __DAILY_BIAS_LOGIC_MQH__

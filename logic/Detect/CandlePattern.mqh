@@ -1,7 +1,3 @@
-//+------------------------------------------------------------------+
-//| CandlePattern.mqh – Core candle patterns + strength (0..100)     |
-//| Dùng cho FOREX (gap-agnostic). Mặc định D1 shift=1.              |
-//+------------------------------------------------------------------+
 #ifndef __CANDLE_PATTERN_MQH__
 #define __CANDLE_PATTERN_MQH__
 #property strict

@@ -12,9 +12,11 @@ CTrade trade;
 // data
 #include "../data/MarketDataService.mqh"
 
-// logic
-#include "../logic/Detect/DetectBIAS.mqh"
-#include "../logic/Detect/CoreLogicBIAS.mqh"
+//logic
+#include "../logic/Detect/ScanBIAS.mqh"
+#include "../logic/Detect/LogicBIAS.mqh"
+#include "../logic/Detect/CandlePattern.mqh"
+
 #include "../logic/SignalService.mqh"
 #include "../logic/TicketService.mqh"
 #include "../logic/TradeService.mqh"// Hedging (đường dẫn từ Bot/utils -> Bot/logic)

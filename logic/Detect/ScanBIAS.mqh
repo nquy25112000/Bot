@@ -1,13 +1,9 @@
-//+------------------------------------------------------------------+
-//| DetectBIAS.mqh – Daily bias detection (XAUUSD) – Pattern-first   |
-//+------------------------------------------------------------------+
-#ifndef __DAILY_BIAS_CONDITIONS_MQH__
-#define __DAILY_BIAS_CONDITIONS_MQH__
+
+#ifndef __SCAN_BIAS_MQH__
+#define __SCAN_BIAS_MQH__
+#include "LogicBIAS.mqh"
+#include "CandlePattern.mqh"
 #property strict
-
-#include "./CoreLogicBIAS.mqh"
-#include "./CandlePattern.mqh"
-
 
 //--- INDICATOR HANDLES (được CoreLogicBIAS.* sử dụng)
 int rsi_handle  = INVALID_HANDLE;
@@ -16,24 +12,6 @@ int ma50_handle = INVALID_HANDLE;
 int atr_handle  = INVALID_HANDLE;
 int adx_handle  = INVALID_HANDLE;
 
-//--- Kết quả bias
-struct BiasResult
-{
-   // Kết quả bias cuối cùng
-   string  type;            // "BUY" | "SELL" | "NONE"
-   double  percent;         // điểm hướng thắng (sau pattern bonus)
-   double  bullScore;       // tổng điểm Bull
-   double  bearScore;       // tổng điểm Bear
-
-   // Snapshot CandlePattern của nến D1 đã đóng (shift=EVAL_SHIFT)
-   int     patternId;       // enum CandlePattern
-   string  patternName;     // ví dụ "Bullish Engulfing"
-   double  patternScore;    // 0..100
-   int     patternCandles;  // 1 / 2 / 3 / 5
-   int     patternShift;    // thường = EVAL_SHIFT (1)
-   datetime patternTime;    // open time nến D1 tại shift
-   string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
-};
 
 //================= CONFIG – THRESHOLDS & MAPPING ====================
 #define BASE_MIN_BUY   50.0
@@ -127,7 +105,7 @@ void AdjustThresholdsByPattern(const PatternScore &ps, double &minBuy, double &m
 }
 
 //====================== MAIN: DetectDailyBias =======================
-BiasResult DetectDailyBias_Pro()
+BiasResult DetectDailyBias()
 {
    BiasResult r;
    r.type="NONE"; r.percent=0.0;
@@ -287,8 +265,8 @@ inline void LogDailyBias(const BiasResult &r, int tzOffsetHours=7)
                r.type,r.percent,
                r.bullScore,r.bearScore,
                r.patternName,r.patternScore,r.patternCandles,r.patternStrength,
-               countBUYBIAS, countSELLBIAS, countNONEBIAS,increseVol);
+               1, 1, 1,1);
 }
 
-#endif // __DAILY_BIAS_CONDITIONS_MQH__
+#endif // __SCAN_BIAS_MQH__
 //+------------------------------------------------------------------+
