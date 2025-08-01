@@ -85,9 +85,9 @@ bool ComputeNetAndLatest(string st[], int n,
   double sb = 0, pb = 0, ss = 0, ps = 0;
   ulong lt = 0; double lp = 0, lv = 0; bool isB = false;
 
-  ScanArray(m_tickets,         st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(m_positiveTickets, st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(m_frozenTickets,   st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(dailyBiasNegative,         st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(dailyBiasPositive, st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(dailyBiasFrozen,   st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
 
   if(cnt == 0) return false;
 
@@ -166,9 +166,9 @@ cat > "${OUT_DIR}HedgeTunnel_Martingale_EA.mqh" << 'EOF'
 
 extern string   HEDGE_COMMENT_PREFIX = "HEDGE";
 extern int      HEDGE_MAGIC          = 20250727;
-extern TicketInfo m_tickets[];
-extern TicketInfo m_positiveTickets[];
-extern TicketInfo m_frozenTickets[];
+extern TicketInfo dailyBiasNegative[];
+extern TicketInfo dailyBiasPositive[];
+extern TicketInfo dailyBiasFrozen[];
 
 void Hedging_for_state_martingale(string st[], int n, int maxr, double tpft,
                                   double D_TP, double D_TUNNEL, double mult)

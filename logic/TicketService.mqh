@@ -35,8 +35,8 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
                dailyBiasRuning = 0;
             } else {
                // đoạn này kích hoạt hedging cho các lệnh frozen nếu còn lệnh nhưng chưa có logic hedging thì tạm đóng all lệnh và ngừng dailybias
-               ArrayFree(m_tickets);
-               ArrayFree(m_positiveTickets);
+               ArrayFree(dailyBiasNegative);
+               ArrayFree(dailyBiasPositive);
                CloseAllPosition();
                dailyBiasRuning = 0;
             }
@@ -51,7 +51,6 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
          ENUM_DEAL_ENTRY entry = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(deal_ticket, DEAL_ENTRY);
          if ((type == DEAL_TYPE_BUY || type == DEAL_TYPE_SELL) && entry == DEAL_ENTRY_IN)
          {
-            Print("giá hiện tại: ", getCurrentPrice(orderTypeDailyBias));
             handleDCAPositive(trans.position);
             updateTicketInfo(trans.position, trans.price);
             updateFrozenInfo(trans.position);

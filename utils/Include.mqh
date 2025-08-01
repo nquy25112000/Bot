@@ -9,9 +9,6 @@ CTrade trade;
 // common
 #include "../common/Globals.mqh"
 
-// data
-#include "../data/MarketDataService.mqh"
-
 //logic
 #include "../logic/Detect/ScanBIAS.mqh"
 #include "../logic/Detect/LogicBIAS.mqh"
@@ -38,8 +35,8 @@ CTrade trade;
 
 // utils
 #include "./GetTotalProfitFrom.mqh"
-#include "./updateTicketInfo.mqh"
 #include "./CalcTP.mqh"
+#include "./HandleBiasDataByType.mqh"
 
 
 #endif // __INCLUDE_MQH__
