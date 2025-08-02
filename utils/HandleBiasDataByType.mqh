@@ -18,7 +18,7 @@ void getArrayByType(string arrayType,
                      TicketInfo &negative[],
                      TicketInfo &frozen[],
                      TicketInfo &result[]) {
-                     
+
       if (arrayType == POSITIVE_ARRAY)
          copyTicketArray(positive, result);
       else if (arrayType == NEGATIVE_ARRAY)
@@ -75,7 +75,7 @@ void clearDataByType(string biasType) {
       ArrayFree(dailyBiasNegative);
       ArrayFree(dailyBiasPositive);
       ArrayFree(dailyBiasFrozen);
-   } 
+   }
    else if (biasType == H4_BIAS) {
       ArrayFree(h4BiasNegative);
       ArrayFree(h4BiasPositive);
@@ -139,7 +139,11 @@ void setOrderTypeByBiasType(string biasType){
 
 
 ENUM_ORDER_TYPE getDailyBiasOrderType(){
-   BiasResult biasResult = DetectDailyBias();
+
+    BiasConfig cfg;
+    cfg.symbol = _Symbol;
+    cfg.timeframe = BIAS_TF_D1;        // D1
+   SBiasResult biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL"){
      return ORDER_TYPE_SELL;
    } else {

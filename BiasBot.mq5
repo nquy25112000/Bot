@@ -3,6 +3,7 @@
 
 int OnInit()
 {
+  InitializeBiasIndicators(_Symbol);
   EventSetTimer(1);
   return(INIT_SUCCEEDED);
 }
@@ -23,21 +24,31 @@ void OnTimer() {
   datetime now = TimeCurrent();
   MqlDateTime dt;
   TimeToStruct(now, dt);
-  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && dt.day != lastLoggedDay) {
-    BiasResult br = DetectDailyBias();
-    if (br.type == "SELL") {
+  // ===== Nhật ký Bias mở phiên mới (00:00) =====
+  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && dt.day != lastLoggedDay)
+  {
+    // 1) Tạo cấu hình detect cho khung D1
+    BiasConfig cfg;
+    cfg.symbol = _Symbol;
+    cfg.timeframe = BIAS_TF_D1;        // D1
+
+    // 2) Gọi hàm detect mới
+    SBiasResult br = DetectBias(cfg);
+
+    // 3) Thống kê kết quả
+    if (br.type == "SELL")
       totalSell++;
-    }
-    else if (br.type == "BUY") {
+    else if (br.type == "BUY")
       totalBuy++;
-    }
     else
-    {
       totalNone++;
-    }
+
+    // 4) Lưu thời điểm đã log & ghi log JSON chuẩn
     lastLoggedDay = dt.day;
-    LogDailyBias(br, 7);
+    LogBiasResultJSON(br);             // ghi JSON (hàm mới)
+    // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
+
   if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startBias(DAILY_BIAS);
     dailyBiasStartTime = now;

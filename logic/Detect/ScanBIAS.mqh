@@ -1,272 +1,234 @@
-
+// ────────────────────────────────────────────────────────────────
+//  ScanBIAS.mqh  –  DetectBias đa khung (H1–H4–D1)
+//  Phiên bản không dùng lambda / MathClamp  → tương thích MT4/MT5
+// ────────────────────────────────────────────────────────────────
 #ifndef __SCAN_BIAS_MQH__
 #define __SCAN_BIAS_MQH__
-#include "LogicBIAS.mqh"
-#include "CandlePattern.mqh"
 #property strict
 
-//--- INDICATOR HANDLES (được CoreLogicBIAS.* sử dụng)
-int rsi_handle = INVALID_HANDLE;
-int macd_handle = INVALID_HANDLE;
-int ma50_handle = INVALID_HANDLE;
-int atr_handle = INVALID_HANDLE;
-int adx_handle = INVALID_HANDLE;
+#include "LogicBIAS.mqh"
+#include "CandlePattern.mqh"
 
-
-//================= CONFIG – THRESHOLDS & MAPPING ====================
+// ---------- HẰNG SỐ CƠ BẢN --------------------------------------
 #define BASE_MIN_BUY   50.0
 #define BASE_MIN_SELL  50.0
 #define BASE_OPP_MAX   35.0
 
-double MapLinear(double x, double x1, double x2, double y1, double y2)
+// ---------- HÀM TIỆN ÍCH ---------------------------------------
+double Clamp(double x, double lo, double hi)  // thay cho MathClamp
 {
-   if (x <= x1) return y1;
-   if (x >= x2) return y2;
-   return y1 + (y2 - y1) * ((x - x1) / (x2 - x1));
+   if(x < lo) return lo;
+   if(x > hi) return hi;
+   return x;
+}
+double MapLinear(double x,double x1,double x2,double y1,double y2)
+{
+   if(x <= x1) return y1;
+   if(x >= x2) return y2;
+   return y1 + (y2 - y1) * ( (x - x1) / (x2 - x1) );
 }
 
-//=== Phân nhóm mẫu nến theo độ mạnh (THAM CHIẾU, không dùng *) =====
-bool IsStrongBull(const PatternScore& ps)
+// ---------- PHÂN LOẠI MẪU NẾN -----------------------------------
+bool IsStrongBull(const PatternScore &ps)
 {
-   if (ps.bias != "BUY") return false;
-   return (ps.id == PATTERN_ENGULFING_BULL
-      || ps.id == PATTERN_PIN_BULL
-      || ps.id == PATTERN_3_WHITE_SOLDIERS
-      || ps.id == PATTERN_RISING_3_METHODS
-      || ps.candlesUsed >= 3);
+   return (ps.bias=="BUY" && (
+           ps.id==PATTERN_ENGULFING_BULL || ps.id==PATTERN_PIN_BULL ||
+           ps.id==PATTERN_3_WHITE_SOLDIERS || ps.id==PATTERN_RISING_3_METHODS ||
+           ps.candlesUsed>=3));
 }
-bool IsStrongBear(const PatternScore& ps)
+bool IsStrongBear(const PatternScore &ps)
 {
-   if (ps.bias != "SELL") return false;
-   return (ps.id == PATTERN_ENGULFING_BEAR
-      || ps.id == PATTERN_PIN_BEAR
-      || ps.id == PATTERN_3_BLACK_CROWS
-      || ps.id == PATTERN_FALLING_3_METHODS
-      || ps.candlesUsed >= 3);
+   return (ps.bias=="SELL" && (
+           ps.id==PATTERN_ENGULFING_BEAR || ps.id==PATTERN_PIN_BEAR ||
+           ps.id==PATTERN_3_BLACK_CROWS || ps.id==PATTERN_FALLING_3_METHODS ||
+           ps.candlesUsed>=3));
 }
-bool IsModerateBull(const PatternScore& ps)
+bool IsModerateBull(const PatternScore &ps)
 {
-   if (ps.bias != "BUY") return false;
-   return (ps.id == PATTERN_LONG_BULL
-      || ps.id == PATTERN_OUTSIDE_BAR_BULL
-      || ps.id == PATTERN_HARAMI_BULL);
+   return (ps.bias=="BUY" && (
+           ps.id==PATTERN_LONG_BULL || ps.id==PATTERN_OUTSIDE_BAR_BULL ||
+           ps.id==PATTERN_HARAMI_BULL));
 }
-bool IsModerateBear(const PatternScore& ps)
+bool IsModerateBear(const PatternScore &ps)
 {
-   if (ps.bias != "SELL") return false;
-   return (ps.id == PATTERN_LONG_BEAR
-      || ps.id == PATTERN_OUTSIDE_BAR_BEAR
-      || ps.id == PATTERN_HARAMI_BEAR);
+   return (ps.bias=="SELL" && (
+           ps.id==PATTERN_LONG_BEAR || ps.id==PATTERN_OUTSIDE_BAR_BEAR ||
+           ps.id==PATTERN_HARAMI_BEAR));
 }
-
-string PatternStrengthLabel(const PatternScore& ps)
+string PatternStrengthLabel(const PatternScore &ps)
 {
-   if (IsStrongBull(ps) || IsStrongBear(ps))     return "STRONG";
-   if (IsModerateBull(ps) || IsModerateBear(ps)) return "MODERATE";
-   if (ps.bias == "NONE")                           return "NEUTRAL";
+   if(IsStrongBull(ps)  || IsStrongBear(ps))   return "STRONG";
+   if(IsModerateBull(ps)|| IsModerateBear(ps)) return "MODERATE";
+   if(ps.bias=="NONE")                         return "NEUTRAL";
    return "WEAK";
 }
 
-//=== Bonus điểm theo pattern (tham chiếu) ===========================
-double PatternBonusBull(const PatternScore& ps)
+// ---------- BONUS THEO MẪU NẾN ----------------------------------
+double PatternBonusBull(const PatternScore &ps)
 {
-   if (ps.bias != "BUY") return 0.0;
-   if (IsStrongBull(ps))    return MathMax(0.0, MathMin(16.0, MapLinear(ps.score, 60, 90, 10, 16)));
-   if (IsModerateBull(ps))  return MathMax(0.0, MathMin(12.0, MapLinear(ps.score, 55, 85, 6, 12)));
+   if(ps.bias!="BUY") return 0.0;
+   if(IsStrongBull(ps))
+      return Clamp(MapLinear(ps.score,60,90,10,16),0.0,16.0);
+   if(IsModerateBull(ps))
+      return Clamp(MapLinear(ps.score,55,85, 6,12),0.0,12.0);
    return 0.0;
 }
-double PatternBonusBear(const PatternScore& ps)
+double PatternBonusBear(const PatternScore &ps)
 {
-   if (ps.bias != "SELL") return 0.0;
-   if (IsStrongBear(ps))    return MathMax(0.0, MathMin(16.0, MapLinear(ps.score, 60, 90, 10, 16)));
-   if (IsModerateBear(ps))  return MathMax(0.0, MathMin(12.0, MapLinear(ps.score, 55, 85, 6, 12)));
+   if(ps.bias!="SELL") return 0.0;
+   if(IsStrongBear(ps))
+      return Clamp(MapLinear(ps.score,60,90,10,16),0.0,16.0);
+   if(IsModerateBear(ps))
+      return Clamp(MapLinear(ps.score,55,85, 6,12),0.0,12.0);
    return 0.0;
 }
 
-//=== Điều chỉnh ngưỡng quyết định theo pattern ======================
-void AdjustThresholdsByPattern(const PatternScore& ps, double& minBuy, double& minSell, double& oppMax)
+// ---------- ĐIỀU CHỈNH NGƯỠNG -----------------------------------
+void AdjustThresholdsByPattern(const PatternScore &ps,
+                               double &minBuy,double &minSell,double &oppMax)
 {
-   minBuy = BASE_MIN_BUY;
+   minBuy  = BASE_MIN_BUY;
    minSell = BASE_MIN_SELL;
-   oppMax = BASE_OPP_MAX;
+   oppMax  = BASE_OPP_MAX;
 
-   if (IsStrongBull(ps)) { minBuy -= 5.0; oppMax -= 5.0; }
-   else if (IsModerateBull(ps)) { minBuy -= 2.0; }
+   if(IsStrongBull(ps))        { minBuy-=5;  oppMax-=5; }
+   else if(IsModerateBull(ps)) { minBuy-=2; }
+   if(IsStrongBear(ps))        { minSell-=5; oppMax-=5; }
+   else if(IsModerateBear(ps)) { minSell-=2; }
+   if(ps.bias=="NONE")         { minBuy+=5;  minSell+=5; oppMax+=5; }
 
-   if (IsStrongBear(ps)) { minSell -= 5.0; oppMax -= 5.0; }
-   else if (IsModerateBear(ps)) { minSell -= 2.0; }
-
-   if (ps.bias == "NONE") { minBuy += 5.0; minSell += 5.0; oppMax += 5.0; }
-
-   // clamp an toàn
-   minBuy = MathMax(35.0, MathMin(70.0, minBuy));
-   minSell = MathMax(35.0, MathMin(70.0, minSell));
-   oppMax = MathMax(20.0, MathMin(60.0, oppMax));
+   minBuy  = Clamp(minBuy ,35.0,70.0);
+   minSell = Clamp(minSell,35.0,70.0);
+   oppMax  = Clamp(oppMax ,20.0,60.0);
 }
 
-//====================== MAIN: DetectDailyBias =======================
-BiasResult DetectDailyBias()
+
+
+static const double g_condWeight[COND_TOTAL] =
+   { 15, 12, 12, 12, 8, 8, 8, 8, 9, 8 };
+
+static const string g_condName[COND_TOTAL] =
+   { "Body","Wick","Volume","RSI","MACD",
+     "MA50","PivotBreakout","PullbackFib","TrendExpansion","NotExhaustion" };
+
+static const bool g_condMandatory[COND_TOTAL] =
+   { false,false,false,false,false,false,false,false,false,false };
+
+// ---------- HÀM CHÍNH: DetectBias --------------------------------
+SBiasResult DetectBias(const BiasConfig &cfg)
 {
-   BiasResult r;
-   r.type = "NONE"; r.percent = 0.0;
-   r.bullScore = 0.0; r.bearScore = 0.0;
-   r.patternId = 0; r.patternName = "None"; r.patternScore = 0.0;
-   r.patternCandles = 1; r.patternShift = EVAL_SHIFT; r.patternTime = 0; r.patternStrength = "NEUTRAL";
+   SBiasResult r;
+   r.symbol     = cfg.symbol;
+   r.timeframe  = cfg.timeframe;
+   r.type       = "NONE";
+   r.percent    = 0.0;
+   r.bullScore  = 0.0;
+   r.bearScore  = 0.0;
 
-   // 1) Pattern của nến D1 đã đóng
-   PatternScore ps = AssessCandleTiered(_Symbol, PERIOD_D1, EVAL_SHIFT);
+   // 1) Chuyển BiasTF sang ENUM_TIMEFRAMES
+   ENUM_TIMEFRAMES tf = PERIOD_D1;
+   if(cfg.timeframe==BIAS_TF_H1) tf=PERIOD_H1;
+   else if(cfg.timeframe==BIAS_TF_H4) tf=PERIOD_H4;
 
-   r.patternId = ps.id;
-   r.patternName = ps.name;
-   r.patternScore = ps.score;
-   r.patternCandles = ps.candlesUsed;
-   r.patternShift = EVAL_SHIFT;
-   r.patternTime = iTime(_Symbol, PERIOD_D1, EVAL_SHIFT);
+   // 2) Đánh giá mẫu nến
+   PatternScore ps = AssessCandleTiered(cfg.symbol,tf,EVAL_SHIFT);
+   r.patternId       = ps.id;
+   r.patternName     = ps.name;
+   r.patternScore    = ps.score;
+   r.patternCandles  = ps.candlesUsed;
+   r.patternShift    = EVAL_SHIFT;
+   r.patternTime     = iTime(cfg.symbol,tf,EVAL_SHIFT);
    r.patternStrength = PatternStrengthLabel(ps);
 
-   // 2) Chấm điểm 10 điều kiện core  =================================
-   // Dùng mảng function pointer thay vì struct chứa function pointer
-   typedef bool (*CondFunc)(void);
-   const int CONDITIONS = 10;
+   // 3) Điểm 10 điều kiện
+   bool resBull[COND_TOTAL];
+   bool resBear[COND_TOTAL];
+   double bull=0.0, bear=0.0;
 
-   static CondFunc condBull[10] = {
-      BodyBull,
-      WickBull,
-      VolumeBull,
-      RSIBull,
-      MACDBull,
-      MA50Bull,
-      PivotBreakoutBull,
-      PullbackFibBull,
-      TrendExpansionBull,
-      NotExhaustionBull
-   };
-   static CondFunc condBear[10] = {
-      BodyBear,
-      WickBear,
-      VolumeBear,
-      RSIBear,
-      MACDBear,
-      MA50Bear,
-      PivotBreakoutBear,
-      PullbackFibBear,
-      TrendExpansionBear,
-      NotExhaustionBear
-   };
-   static bool condMandatory[10] = {
-      false, false, false, false,  // Body, Wick, Volume, RSI
-      false, false,            // MACD, MA50
-      false, false,            // Pivot, PullbackFib
-      false, false             // TrendExpansion, NotExhaustion
-   };
-   static double condWeight[10] = {
-      15, 12, 12, 12, 8, 8, 8, 8, 9, 8
-   };
-   // Tên điều kiện để debug (giữ đúng thứ tự)
-   static string condName[10] = {
-      "Body", "Wick", "Volume", "RSI",
-      "MACD", "MA50",
-      "PivotBreakout", "PullbackFib",
-      "TrendExpansion", "NotExhaustion"
-   };
+   // Helper macro để tiết kiệm gõ
+#define ADD_COND(idx, condBull, condBear)        \
+      { resBull[idx] = (condBull);               \
+        resBear[idx] = (condBear);               \
+        if(resBull[idx]) bull += g_condWeight[idx];  \
+        if(resBear[idx]) bear += g_condWeight[idx]; }
 
-   // Self-check trọng số (in 1 lần duy nhất)
-   {
-      static bool weightChecked = false;
-      if (!weightChecked) {
-         double sumW = 0.0; for (int i = 0;i < CONDITIONS;i++) sumW += condWeight[i];
-         if (MathAbs(sumW - 100.0) > 0.001)
-            PrintFormat("[DetectDailyBias][WARN] condWeight sum != 100 (sum=%.2f)", sumW);
-         weightChecked = true;
-      }
-   }
+   ADD_COND(IDX_BODY ,  BodyBull (cfg.symbol,tf), BodyBear (cfg.symbol,tf));
+   ADD_COND(IDX_WICK ,  WickBull (cfg.symbol,tf), WickBear (cfg.symbol,tf));
+   ADD_COND(IDX_VOLUME, VolumeBull(cfg.symbol,tf),VolumeBear(cfg.symbol,tf));
+   ADD_COND(IDX_RSI  ,  RSIBull  (cfg.symbol,tf), RSIBear  (cfg.symbol,tf));
+   ADD_COND(IDX_MACD ,  MACDBull (cfg.symbol,tf), MACDBear (cfg.symbol,tf));
+   ADD_COND(IDX_MA50 ,  MA50Bull (cfg.symbol,tf), MA50Bear (cfg.symbol,tf));
+   ADD_COND(IDX_PIVOT,  PivotBreakoutBull(cfg.symbol,tf),
+                         PivotBreakoutBear(cfg.symbol,tf));
+   ADD_COND(IDX_PULLBACK,PullbackFibBull(cfg.symbol,tf),
+                            PullbackFibBear(cfg.symbol,tf));
+   ADD_COND(IDX_TREND_EXP,TrendExpansionBull(cfg.symbol,tf),
+                            TrendExpansionBear(cfg.symbol,tf));
+   ADD_COND(IDX_NOT_EXH ,NotExhaustionBull(cfg.symbol,tf),
+                            NotExhaustionBear(cfg.symbol,tf));
+#undef ADD_COND
 
-   // === Tính điểm + Cache kết quả cho Mandatory Gate ===
-   double bull = 0.0, bear = 0.0;
-   bool   resBull[10];
-   bool   resBear[10];
-
-   for (int i = 0; i < CONDITIONS; i++)
-   {
-      bool bBull = condBull[i]();
-      bool bBear = condBear[i]();
-
-      resBull[i] = bBull;
-      resBear[i] = bBear;
-
-      if (bBull) bull += condWeight[i];
-      if (bBear) bear += condWeight[i];
-   }
-
-   // 3) Bonus pattern — có “trend factor” để tránh lệch khi thiếu trend
-   // Index 8 = TrendExpansion
+   // 4) Bonus mẫu nến
    double bonusBull = PatternBonusBull(ps);
    double bonusBear = PatternBonusBear(ps);
-   if (!resBull[8]) bonusBull *= 0.6;  // không có TrendExpansion: giảm sức mạnh pattern
-   if (!resBear[8]) bonusBear *= 0.6;
-
+   if(!resBull[IDX_TREND_EXP]) bonusBull *= 0.6;
+   if(!resBear[IDX_TREND_EXP]) bonusBear *= 0.6;
    bull += bonusBull;
    bear += bonusBear;
 
-   // 4) Ngưỡng động
-   double minBuy, minSell, oppMax;
-   AdjustThresholdsByPattern(ps, minBuy, minSell, oppMax);
+   // 5) Ngưỡng động
+   double minBuy,minSell,oppMax;
+   AdjustThresholdsByPattern(ps,minBuy,minSell,oppMax);
 
-   // 5) Mandatory Gate (Mục 10): nếu bất kỳ điều kiện tiên quyết fail ⇒ hướng đó bị chặn
-   bool   mandatoryBullOK = true;
-   bool   mandatoryBearOK = true;
-   string failBull = "", failBear = "";
-
-   for (int i = 0; i < CONDITIONS; i++)
+   // 6) Mandatory gate
+   bool mandatoryBullOK=true, mandatoryBearOK=true;
+   for(int i=0;i<COND_TOTAL;i++)
    {
-      if (condMandatory[i] && !resBull[i]) {
-         mandatoryBullOK = false;
-         if (failBull != "") failBull += ", ";
-         failBull += condName[i];
-      }
-      if (condMandatory[i] && !resBear[i]) {
-         mandatoryBearOK = false;
-         if (failBear != "") failBear += ", ";
-         failBear += condName[i];
-      }
+      if(g_condMandatory[i] && !resBull[i]) mandatoryBullOK=false;
+      if(g_condMandatory[i] && !resBear[i]) mandatoryBearOK=false;
    }
 
-   // 6) Quyết định (thêm margin chênh lệch tối thiểu để tránh sát nút)
+   // 7) Ra quyết định
    r.bullScore = bull;
    r.bearScore = bear;
+   double margin = 4.0;
 
-   double margin = 4.0; // có thể tinh chỉnh hoặc map theo ADX nếu muốn
+   bool buyOK  = mandatoryBullOK && bull>=minBuy  && bull>bear &&
+                 (bull-bear)>=margin && bear<oppMax;
+   bool sellOK = mandatoryBearOK && bear>=minSell && bear>bull &&
+                 (bear-bull)>=margin && bull<oppMax;
 
-   bool buyOK = mandatoryBullOK && (bull >= minBuy) && (bull > bear) && ((bull - bear) >= margin) && (bear < oppMax);
-   bool sellOK = mandatoryBearOK && (bear >= minSell) && (bear > bull) && ((bear - bull) >= margin) && (bull < oppMax);
-
-   if (!mandatoryBullOK)
-      PrintFormat("[DetectDailyBias] BUY blocked by mandatory fails: %s", failBull);
-   if (!mandatoryBearOK)
-      PrintFormat("[DetectDailyBias] SELL blocked by mandatory fails: %s", failBear);
-
-   if (buyOK && !sellOK) { r.type = "BUY";  r.percent = MathMin(100.0, bull); }
-   else if (sellOK && !buyOK) { r.type = "SELL"; r.percent = MathMin(100.0, bear); }
-   else { r.type = "NONE"; r.percent = 0.0; }
+   if(buyOK && !sellOK)  { r.type="BUY";  r.percent=Clamp(bull,0,100); }
+   else if(sellOK && !buyOK){ r.type="SELL"; r.percent=Clamp(bear,0,100);}
+   else { r.type="NONE"; r.percent=0.0; }
 
    return r;
 }
 
-//====================== DEBUG HELPERS ===============================
-inline void LogDailyBias(const BiasResult& r, int tzOffsetHours = 7)
+// ---------- GHI LOG JSON (tuỳ chọn) ------------------------------
+void LogBiasResultJSON(const SBiasResult &r)
 {
-   datetime t = r.patternTime;
-   if (tzOffsetHours != 0) t += tzOffsetHours * 3600;
-   MqlDateTime d; TimeToStruct(t, d);
+   string tfStr = (r.timeframe==BIAS_TF_H1 ? "H1" :
+                   r.timeframe==BIAS_TF_H4 ? "H4" : "D1");
 
-   PrintFormat("[D1 %04d-%02d-%02d] Bias=%s pct=%.1f | Bull=%.1f Bear=%.1f | "
-      "Pattern=%s[score=%.0f,used=%d,%s] | BUY: %i | SELL: %i | NONE: %i | increseVol=%.2f",
-      d.year, d.mon, d.day,
-      r.type, r.percent,
-      r.bullScore, r.bearScore,
-      r.patternName, r.patternScore, r.patternCandles, r.patternStrength,
-      totalBuy, totalSell, totalNone, 1);
+   string json;
+   json  = "{\"symbol\":\""+r.symbol+"\","
+           "\"timeframe\":\""+tfStr+"\","
+           "\"bias\":\""+r.type+"\","
+           "\"score\":"+DoubleToString(r.percent,1)+","
+           "\"timestamp\":"+(string)r.patternTime+"}";
+
+   Print(json);
+
+   int h = FileOpen("DetectBiasLog.json",
+                    FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
+   if(h!=INVALID_HANDLE){
+      FileSeek(h,0,SEEK_END);
+      FileWrite(h,json);
+      FileClose(h);
+   }
 }
 
+// ---------- ALIAS GIỮ TƯƠNG THÍCH CŨ ---------------------------
+
 #endif // __SCAN_BIAS_MQH__
-//+------------------------------------------------------------------+

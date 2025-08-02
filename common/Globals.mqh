@@ -16,24 +16,37 @@ struct TicketInfo
   ulong             frozenByTicketId;
 };
 
-struct BiasResult
-{
-  // Kết quả bias cuối cùng
-  string  type;            // "BUY" | "SELL" | "NONE"
-  double  percent;         // điểm hướng thắng (sau pattern bonus)
-  double  bullScore;       // tổng điểm Bull
-  double  bearScore;       // tổng điểm Bear
+// ---------- ENUM / STRUCT ---------------------------------------
+enum BiasTF { BIAS_TF_H1=0, BIAS_TF_H4=1, BIAS_TF_D1=2 };
 
-  // Snapshot CandlePattern của nến D1 đã đóng (shift=EVAL_SHIFT)
-  int     patternId;       // enum CandlePattern
-  string  patternName;     // ví dụ "Bullish Engulfing"
-  double  patternScore;    // 0..100
-  int     patternCandles;  // 1 / 2 / 3 / 5
-  int     patternShift;    // thường = EVAL_SHIFT (1)
-  datetime patternTime;    // open time nến D1 tại shift
-  string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
+struct BiasConfig {
+   string symbol;
+   BiasTF timeframe;
 };
 
+// ---------- BẢNG CÂN TRỌNG 10 ĐIỀU KIỆN -------------------------
+enum CondIdx {
+   IDX_BODY=0, IDX_WICK, IDX_VOLUME, IDX_RSI, IDX_MACD,
+   IDX_MA50, IDX_PIVOT, IDX_PULLBACK, IDX_TREND_EXP, IDX_NOT_EXH,
+   COND_TOTAL                               // = 10
+};
+
+struct SBiasResult   // ← đổi tên
+{
+   string symbol;
+   BiasTF timeframe;
+   string type;          // "BUY" | "SELL" | "NONE"
+   double percent;
+   double bullScore;
+   double bearScore;
+   int    patternId;
+   string patternName;
+   double patternScore;
+   int    patternCandles;
+   int    patternShift;
+   datetime patternTime;
+   string patternStrength;
+};
 
 // thời gian start daily bias. dùng để xác định thời gian bắt đầu của 1 lần chạy daily để tính toán lợi nhuận từ thời điểm start đến hiện tại
 datetime dailyBiasStartTime;
