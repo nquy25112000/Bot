@@ -17,40 +17,40 @@ void orderFrozenByTicketId(ulong frozenByTicketId){
      0,
      frozenByTicketId,
     };
-    AddFrozenTicketToArray(dailyBiasFrozen, ticket);
+    AddFrozenTicketToArray(m_frozenTickets, ticket);
 }
 
 // đóng lệnh frozen và update lại state cho nó là close
 void closeFrozenActiveStopByTicketId(ulong frozenByTicketId){
-   for(uint i = 0; i < dailyBiasFrozen.Size(); i++){
-      TicketInfo ticket = dailyBiasFrozen[i];
+   for(uint i = 0; i < m_frozenTickets.Size(); i++){
+      TicketInfo ticket = m_frozenTickets[i];
       if(frozenByTicketId == ticket.frozenByTicketId && ticket.state == STATE_ACTIVE_FROZEN){
          CloseByTicket(ticket.ticketId);
          ticket.state = STATE_CLOSE;
-         dailyBiasFrozen[i] = ticket;
+         m_frozenTickets[i] = ticket;
       }
    }
 }
 
 // đóng tất cả lệnh frozentTicket;
 void closeAllFrozenTicket(){
-   for(uint i = 0; i < dailyBiasFrozen.Size(); i++){
-      TicketInfo ticket = dailyBiasFrozen[i];
+   for(uint i = 0; i < m_frozenTickets.Size(); i++){
+      TicketInfo ticket = m_frozenTickets[i];
       if(ticket.state == STATE_OPEN_FROZEN){
          CloseByTicket(ticket.ticketId);
          ticket.state = STATE_CLOSE;
-         dailyBiasFrozen[i] = ticket;
+         m_frozenTickets[i] = ticket;
       }
    }
 }
 
 // update lại state khi khớp lệnh frozen
 void updateFrozenInfo(ulong ticketId){
-   for(uint i = 0; i < dailyBiasFrozen.Size(); i++){
-      TicketInfo ticket = dailyBiasFrozen[i];
+   for(uint i = 0; i < m_frozenTickets.Size(); i++){
+      TicketInfo ticket = m_frozenTickets[i];
       if(ticket.ticketId == ticketId){
          ticket.state = STATE_OPEN_FROZEN;
-         dailyBiasFrozen[i] = ticket;
+         m_frozenTickets[i] = ticket;
       }
    }
 }
@@ -64,8 +64,8 @@ void AddFrozenTicketToArray(TicketInfo& arr[], const TicketInfo& value) {
 
 // check xem thử ticketDCA có frozen nào đang open không
 bool isExistsFrozenOpen(double frozenByTicketId){
-   for(uint i = 0; i < dailyBiasFrozen.Size(); i++){
-      TicketInfo ticket = dailyBiasFrozen[i];
+   for(uint i = 0; i < m_frozenTickets.Size(); i++){
+      TicketInfo ticket = m_frozenTickets[i];
       if(ticket.frozenByTicketId == frozenByTicketId && ticket.state == STATE_OPEN_FROZEN){
          return true;
       }
