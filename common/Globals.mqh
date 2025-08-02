@@ -56,12 +56,13 @@ int negativeTicketIndex = 0;
 double targetProfitDailyBias = 900;
 
 // dailyBiasNegativeVolume danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
-double dailyBiasNegativeVolume[19] = { 0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
 // mảng 10 phần tử để test
 // static const double dailyBiasNegativeVolume[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
+double dailyBiasNegativeVolume[19] = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
 
-double h4BiasNegativeVolume[];
-double h1BiasNegativeVolume[];
+double h4BiasNegativeVolume[19]    = {0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02};
+double h1BiasNegativeVolume[19]    = {0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02};
+
 
 // dailyBiasNegative là danh sách ticket tương ứng với dailyBiasNegativeVolume
 TicketInfo dailyBiasNegative[];
