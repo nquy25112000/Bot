@@ -146,8 +146,10 @@ ENUM_ORDER_TYPE getDailyBiasOrderType(){
    BiasResult biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL"){
      return ORDER_TYPE_SELL;
+   } else if (biasResult.type == "BUY") {
+      return ORDER_TYPE_BUY;
    } else {
-     return ORDER_TYPE_BUY;
+     return;
    }
 }
 
