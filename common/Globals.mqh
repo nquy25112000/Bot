@@ -1,8 +1,3 @@
-//+------------------------------------------------------------------+
-//|                                                      ProjectName |
-//|                                      Copyright 2020, CompanyName |
-//|                                       http://www.companyname.net |
-//+------------------------------------------------------------------+
 #ifndef __GLOBALS_MQH__
 #define __GLOBALS_MQH__
 
@@ -24,14 +19,14 @@ struct BiasConfig {
    BiasTF timeframe;
 };
 
-// ---------- BẢNG CÂN TRỌNG 10 ĐIỀU KIỆN -------------------------
+
 enum CondIdx {
    IDX_BODY = 0, IDX_WICK, IDX_VOLUME, IDX_RSI, IDX_MACD,
    IDX_MA50, IDX_PIVOT, IDX_PULLBACK, IDX_TREND_EXP, IDX_NOT_EXH,
    COND_TOTAL                               // = 10
 };
 
-struct BiasResult   // ← đổi tên
+struct BiasResult
 {
    string symbol;
    BiasTF timeframe;
@@ -59,17 +54,16 @@ double targetProfitDailyBias = 900;
 // mảng 10 phần tử để test
 // static const double dailyBiasNegativeVolume[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
 double dailyBiasNegativeVolume[19] = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
-
 double h4BiasNegativeVolume[19]    = {0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02};
 double h1BiasNegativeVolume[19]    = {0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02};
 
 
-// dailyBiasNegative là danh sách ticket tương ứng với dailyBiasNegativeVolume
-TicketInfo dailyBiasNegative[];
-// dailyBiasPositive là danh sách các ticket  dùng cho DCA dương để xác định điểm đó đã được gán lệnh để giá quét qua lại nhiều lần không vào thêm lệnh mới
-TicketInfo dailyBiasPositive[];
-// dailyBiasFrozen là danh sách các lệnh đóng băng cho lệnh DCA dương
-TicketInfo dailyBiasFrozen[];
+// negTicketList là danh sách ticket tương ứng với dailyBiasNegativeVolume
+TicketInfo negTicketList[];
+// posTicketList là danh sách các ticket  dùng cho DCA dương để xác định điểm đó đã được gán lệnh để giá quét qua lại nhiều lần không vào thêm lệnh mới
+TicketInfo posTicketList[];
+// frozTicketList là danh sách các lệnh đóng băng cho lệnh DCA dương
+TicketInfo frozTicketList[];
 
 TicketInfo h4BiasNegative[];
 TicketInfo h4BiasPositive[];

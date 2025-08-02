@@ -35,8 +35,8 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
                dailyBiasRuning = 0;
             } else {
                // đoạn này kích hoạt hedging cho các lệnh frozen nếu còn lệnh nhưng chưa có logic hedging thì tạm đóng all lệnh và ngừng dailybias
-               ArrayFree(dailyBiasNegative);
-               ArrayFree(dailyBiasPositive);
+               ArrayFree(negTicketList);
+               ArrayFree(posTicketList);
                CloseAllPosition();
                dailyBiasRuning = 0;
             }

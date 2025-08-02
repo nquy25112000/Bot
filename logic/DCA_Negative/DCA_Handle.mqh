@@ -130,7 +130,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
 
   /*
 
-  // dailyBiasNegative[1] là phần tử thứ 2 ở mảng DCA âm
+  // negTicketList[1] là phần tử thứ 2 ở mảng DCA âm
   // nếu state nó OPEN nghĩa là mảng DCA âm tồn tại 1 ticket open -> đủ điều kiện order lại DCA dương
   // nếu state là ACTIVE_STOP nghĩa là nó chắc chắn sẽ khớp tại đó hoặc sẽ khớp lệnh ở 1 vị trí đẹp hơn phía dưới -> đủ điều kiện
   // nếu state là SKIP nghĩa là nó đã quét qua và khớp lệnh đẹp hơn phía dưới rồi -> đủ điều kiện

@@ -3,11 +3,11 @@
 
 // Khi lệnh DCA SL thì gọi để update mảng thành CLOSE để khỏi quét qua lại nhiều lần
 void updateStateCloseDCAPositive(ulong ticketId) {
-  for (uint i = 0; i < dailyBiasPositive.Size(); i++) {
-    TicketInfo ticket = dailyBiasPositive[i];
+  for (uint i = 0; i < posTicketList.Size(); i++) {
+    TicketInfo ticket = posTicketList[i];
     if (ticket.ticketId == ticketId) {
       ticket.state = STATE_CLOSE;
-      dailyBiasPositive[i] = ticket;
+      posTicketList[i] = ticket;
     }
   }
 }

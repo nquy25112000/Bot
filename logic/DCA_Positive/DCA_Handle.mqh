@@ -35,7 +35,7 @@ void handleDCAPositive(ulong ticketId) {
     return;
   }
 
-  // khi mảng dailyBiasPositive có 2 phần tử trở lên nghĩa là lệnh cao nhất đã khớp, khớp thì dời sl lệnh thấp về giá của lệnh cao nhất - 0.5 giá
+  // khi mảng posTicketList có 2 phần tử trở lên nghĩa là lệnh cao nhất đã khớp, khớp thì dời sl lệnh thấp về giá của lệnh cao nhất - 0.5 giá
   for (uint i = 0; i < positiveTicketsByBiasType.Size(); i++) {
     TicketInfo ticket = positiveTicketsByBiasType[i];
     double sl = 0;
@@ -52,7 +52,7 @@ void handleDCAPositive(ulong ticketId) {
     }
     if(sl != 0){
       if(trade.PositionModify(ticket.ticketId, sl, 0)){
-         dailyBiasPositive[i] = ticket;
+         posTicketList[i] = ticket;
          // lệnh nào set SL thành công thì close lệnh sell stop frozen đi, còn lệnh nào đang open rồi là nó đang vào lệnh không close nó
          // tại vì chỉ frozen cho lệnh cao nhất, khi đã vào set SL cho lệnh thấp nghĩa là lệnh cao nhất đã được mở và đã có frozen, lệnh này k frozen nữa
          closeFrozenActiveStopByTicketId(ticket.ticketId);
@@ -62,14 +62,14 @@ void handleDCAPositive(ulong ticketId) {
 }
 
 bool checkFirstDCAPositive() {
-   if (dailyBiasPositive.Size() < 2) return true;
+   if (posTicketList.Size() < 2) return true;
    // phần tử đầu tiên của mảng luôn luôn là lệnh DCA Dương đầu tiên trong ngày.
    // check DCA lần 2 bằng cách check xem thử trong mảng còn phần tử nào có price bằng với price của lệnh đầu DCA dương đầu tiên hay k
    // nếu có thì chắc chắn giá đã từng tuột xuống dưới mảng DCA âm và đã order 1 lệnh DCA Dương lại
    // trong hàm scanDCANegative sẽ thực hiện order 1 ticket DCA dương nếu đủ điều kiện
-   TicketInfo ticket = dailyBiasPositive[0];
-   for(uint i = 1; i < dailyBiasPositive.Size(); i++) {
-      TicketInfo nextTicket = dailyBiasPositive[i];
+   TicketInfo ticket = posTicketList[0];
+   for(uint i = 1; i < posTicketList.Size(); i++) {
+      TicketInfo nextTicket = posTicketList[i];
       if(ticket.price == nextTicket.price) {
          return false;
       }

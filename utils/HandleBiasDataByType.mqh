@@ -5,7 +5,7 @@
 // lấy mảng theo loại âm dương hoặc frozen theo loại
 void getBiasArray(string biasType, string arrayType, TicketInfo &result[]) {
    if (biasType == DAILY_BIAS) {
-      getArrayByType(arrayType, dailyBiasPositive, dailyBiasNegative, dailyBiasFrozen, result);
+      getArrayByType(arrayType, posTicketList, negTicketList, frozTicketList, result);
    } else if (biasType == H4_BIAS) {
       getArrayByType(arrayType, h4BiasPositive, h4BiasNegative, h4BiasFrozen, result);
    } else if (biasType == H1_BIAS) {
@@ -31,7 +31,7 @@ void getArrayByType(string arrayType,
 
 void updateBiasArray(string biasType, string arrayType, TicketInfo &result[]) {
    if (biasType == DAILY_BIAS) {
-      updateArrayByType(arrayType, dailyBiasPositive, dailyBiasNegative, dailyBiasFrozen, result);
+      updateArrayByType(arrayType, posTicketList, negTicketList, frozTicketList, result);
    } else if (biasType == H4_BIAS) {
       updateArrayByType(arrayType, h4BiasPositive, h4BiasNegative, h4BiasFrozen, result);
    } else if (biasType == H1_BIAS) {
@@ -62,19 +62,19 @@ void copyTicketArray(TicketInfo &source[], TicketInfo &destination[]) {
 
 void updateDailyBiasArray(string arrayType, TicketInfo &result[]){
       if (arrayType == POSITIVE_ARRAY)
-         copyTicketArray(dailyBiasPositive, result);
+         copyTicketArray(posTicketList, result);
       else if (arrayType == NEGATIVE_ARRAY)
-         copyTicketArray(dailyBiasNegative, result);
+         copyTicketArray(negTicketList, result);
       else if (arrayType == FROZEN_ARRAY)
-         copyTicketArray(dailyBiasFrozen, result);
+         copyTicketArray(frozTicketList, result);
 }
 
 
 void clearDataByType(string biasType) {
    if (biasType == DAILY_BIAS) {
-      ArrayFree(dailyBiasNegative);
-      ArrayFree(dailyBiasPositive);
-      ArrayFree(dailyBiasFrozen);
+      ArrayFree(negTicketList);
+      ArrayFree(posTicketList);
+      ArrayFree(frozTicketList);
    }
    else if (biasType == H4_BIAS) {
       ArrayFree(h4BiasNegative);
