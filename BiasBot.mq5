@@ -33,7 +33,7 @@ void OnTimer() {
     cfg.timeframe = BIAS_TF_D1;        // D1
 
     // 2) Gọi hàm detect mới
-    SBiasResult br = DetectBias(cfg);
+    BiasResult br = DetectBias(cfg);
 
     // 3) Thống kê kết quả
     if (br.type == "SELL")

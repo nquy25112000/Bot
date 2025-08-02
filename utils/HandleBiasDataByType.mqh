@@ -143,7 +143,7 @@ ENUM_ORDER_TYPE getDailyBiasOrderType(){
     BiasConfig cfg;
     cfg.symbol = _Symbol;
     cfg.timeframe = BIAS_TF_D1;        // D1
-   SBiasResult biasResult = DetectBias(cfg);
+   BiasResult biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL"){
      return ORDER_TYPE_SELL;
    } else {

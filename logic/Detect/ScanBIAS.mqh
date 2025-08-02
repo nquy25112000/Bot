@@ -115,9 +115,9 @@ static const bool g_condMandatory[COND_TOTAL] =
    { false,false,false,false,false,false,false,false,false,false };
 
 // ---------- HÀM CHÍNH: DetectBias --------------------------------
-SBiasResult DetectBias(const BiasConfig &cfg)
+BiasResult DetectBias(const BiasConfig &cfg)
 {
-   SBiasResult r;
+   BiasResult r;
    r.symbol     = cfg.symbol;
    r.timeframe  = cfg.timeframe;
    r.type       = "NONE";
@@ -206,7 +206,7 @@ SBiasResult DetectBias(const BiasConfig &cfg)
 }
 
 // ---------- GHI LOG JSON (tuỳ chọn) ------------------------------
-void LogBiasResultJSON(const SBiasResult &r)
+void LogBiasResultJSON(const BiasResult &r)
 {
    string tfStr = (r.timeframe==BIAS_TF_H1 ? "H1" :
                    r.timeframe==BIAS_TF_H4 ? "H4" : "D1");

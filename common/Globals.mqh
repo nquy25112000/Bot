@@ -31,7 +31,7 @@ enum CondIdx {
    COND_TOTAL                               // = 10
 };
 
-struct SBiasResult   // ← đổi tên
+struct BiasResult   // ← đổi tên
 {
    string symbol;
    BiasTF timeframe;
