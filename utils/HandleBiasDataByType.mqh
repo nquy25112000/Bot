@@ -127,22 +127,13 @@ void setFirstEntryByBiasType(string biasType, double firstEntry){
    }
 }
 
-void setOrderTypeByBiasType(string biasType){
-   if (biasType == DAILY_BIAS) {
-      orderTypeDailyBias = getDailyBiasOrderType();
-   } else if (biasType == H4_BIAS) {
-      orderTypeDailyBias = getDailyBiasOrderType(); // cần viết lại loại buy or sell cho H4
-   } else if (biasType == H1_BIAS) {
-      orderTypeDailyBias = getDailyBiasOrderType(); // cần viết lại loại buy or sell cho H1
-   }
-}
 
 
-ENUM_ORDER_TYPE getDailyBiasOrderType(){
+ENUM_ORDER_TYPE getBiasOrderType(string biasType){
 
     BiasConfig cfg;
     cfg.symbol = _Symbol;
-    cfg.timeframe = BIAS_TF_D1;        // D1
+    cfg.timeframe = biasType == DAILY_BIAS ? BIAS_TF_D1 : (biasType == H4_BIAS ? BIAS_TF_H4 : BIAS_TF_H1);
    BiasResult biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL"){
      return ORDER_TYPE_SELL;
@@ -153,16 +144,6 @@ ENUM_ORDER_TYPE getDailyBiasOrderType(){
    }
 }
 
-ENUM_ORDER_TYPE getOrderTypeByBiasType(string biasType){
-    if (biasType == DAILY_BIAS) {
-      return getDailyBiasOrderType();
-   } else if (biasType == H4_BIAS) {
-      return getDailyBiasOrderType(); // cần viết lại loại buy or sell cho H4
-   } else if (biasType == H1_BIAS) {
-      return getDailyBiasOrderType(); // cần viết lại loại buy or sell cho H1
-   }
-   return ORDER_TYPE_BUY;
-}
 
 double getPriceFirstEntryByBiasType(string biasType){
    if (biasType == DAILY_BIAS) {

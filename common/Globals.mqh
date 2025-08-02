@@ -8,16 +8,16 @@
 
 struct TicketInfo
 {
-  ulong             ticketId;
-  double            volume;
-  string            state;
-  double            price;
-  double            activePrice;
-  ulong             frozenByTicketId;
+   ulong             ticketId;
+   double            volume;
+   string            state;
+   double            price;
+   double            activePrice;
+   ulong             frozenByTicketId;
 };
 
 // ---------- ENUM / STRUCT ---------------------------------------
-enum BiasTF { BIAS_TF_H1=0, BIAS_TF_H4=1, BIAS_TF_D1=2 };
+enum BiasTF { BIAS_TF_H1 = 0, BIAS_TF_H4 = 1, BIAS_TF_D1 = 2 };
 
 struct BiasConfig {
    string symbol;
@@ -26,7 +26,7 @@ struct BiasConfig {
 
 // ---------- BẢNG CÂN TRỌNG 10 ĐIỀU KIỆN -------------------------
 enum CondIdx {
-   IDX_BODY=0, IDX_WICK, IDX_VOLUME, IDX_RSI, IDX_MACD,
+   IDX_BODY = 0, IDX_WICK, IDX_VOLUME, IDX_RSI, IDX_MACD,
    IDX_MA50, IDX_PIVOT, IDX_PULLBACK, IDX_TREND_EXP, IDX_NOT_EXH,
    COND_TOTAL                               // = 10
 };
@@ -91,8 +91,8 @@ int totalBuy = 0;
 int totalNone = 0;
 int lastLoggedDay = -1;
 
-// orderTypeDailyBias biến khởi tạo đẻ xác định hôm nay đánh bài nào
-ENUM_ORDER_TYPE orderTypeDailyBias;
+// orderTypeBias biến khởi tạo đẻ xác định hôm nay đánh bài nào
+ENUM_ORDER_TYPE orderTypeBias;
 ENUM_ORDER_TYPE orderTypeH4Bias;
 ENUM_ORDER_TYPE orderTypeH1Bias;
 
@@ -133,7 +133,7 @@ int    HEDGE_MAGIC = 20250727;
 
 
 // Bias Type
-#define DAILY_BIAS        "DAILY"
+#define DAILY_BIAS     "D1"
 #define H4_BIAS        "H4"
 #define H1_BIAS        "H1"
 

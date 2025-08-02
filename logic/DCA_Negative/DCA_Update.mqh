@@ -2,7 +2,7 @@
 #define __DCA_NEGATIVE_UPDATE_MQH__
 
 
-void updateTpForOpenTicket() { 
+void updateTpForOpenTicket() {
 
   /*//  chỉ tính cho DCA âm
   // sumVolumeOpen tính tổng vol của các lệnh đang mở và lệnh ACTIVE_STOP
@@ -41,8 +41,8 @@ void updateTpForOpenTicket() {
       }
     }
   }*/
-  
-  
+
+
   // tính TP và update TP cho tất cả lệnh đang mở cùng chiều daily bias
 
   double sumVolumeOpen = 0; // (vol₁ + vol₂ + ... + volₙ)
@@ -54,31 +54,31 @@ void updateTpForOpenTicket() {
 
   for (int i = 0; i < total; i++) {
     ulong ticket = PositionGetTicket(i);
-      
+
     if (PositionSelectByTicket(ticket)) {
       ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
       ENUM_ORDER_TYPE orderType = positionTypeToOrderType(positionType);
       // chỉ lấy lệnh cùng chiều daily bias
-      if(orderType == orderTypeDailyBias){
+      if(orderType == orderTypeBias){
          sumVolumeOpen += PositionGetDouble(POSITION_VOLUME);
          sumPriceOpen += PositionGetDouble(POSITION_PRICE_OPEN) * PositionGetDouble(POSITION_VOLUME);
       }
-      
+
     }
   }
-  
+
   double averagePrice = sumPriceOpen / sumVolumeOpen;
   double tp = CalcTP(averagePrice, sumVolumeOpen, negativeTicketIndex);
-  
-  
+
+
   for (int i = 0; i < total; i++) {
     ulong ticket = PositionGetTicket(i);
-    
+
     if (PositionSelectByTicket(ticket)) {
       ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
       ENUM_ORDER_TYPE orderType = positionTypeToOrderType(positionType);
       // chỉ lấy lệnh cùng chiều daily bias
-      if(orderType == orderTypeDailyBias){
+      if(orderType == orderTypeBias){
          double old_sl = PositionGetDouble(POSITION_SL);
          trade.PositionModify(ticket, old_sl, tp);
       }

@@ -49,7 +49,7 @@ void OnTimer() {
     // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
 
-  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning && false) {
+  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
     startBias(DAILY_BIAS);
     dailyBiasStartTime = now;
   }

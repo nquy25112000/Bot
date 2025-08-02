@@ -3,7 +3,7 @@
 
 void orderFrozenByTicketId(ulong frozenByTicketId){
    ulong ticketId;
-    if (orderTypeDailyBias == ORDER_TYPE_BUY) { // frozen thì ngược lại xu hướng để đóng băng
+    if (orderTypeBias == ORDER_TYPE_BUY) { // frozen thì ngược lại xu hướng để đóng băng
       ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, priceFirstEntryDailyBias, dcaPositiveVol, 0, 0); // dùng đúng vol đã vào lệnh DCA dương
     }
     else {

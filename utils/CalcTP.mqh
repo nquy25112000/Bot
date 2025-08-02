@@ -17,7 +17,7 @@ double CalcTP(double avgPrice, double totalVol, int entryIndex)
   double targetCent = getTargetCentDailyBias(entryIndex);
 
   double deltaP = targetCent / (totalVol * 100.0);
-  return (avgPrice + (orderTypeDailyBias == ORDER_TYPE_BUY ? deltaP : - deltaP)); 
+  return (avgPrice + (orderTypeBias == ORDER_TYPE_BUY ? deltaP : - deltaP));
 }
 
 double getTargetCentDailyBias(int entryIndex){

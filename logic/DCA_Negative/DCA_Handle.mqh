@@ -6,27 +6,27 @@ void initDCANegative(string biasType) {
     // lấy mảng volume theo bias type
     double negativeVolumes[];
     GetVolumeNegativeByType(biasType, negativeVolumes);
-    
+
     // tạo mảng ticket theo size của mảng volume
     TicketInfo ticketInfos[];
     ArrayResize(ticketInfos, ArraySize(negativeVolumes));
-    
-    ENUM_ORDER_TYPE orderType = getOrderTypeByBiasType(biasType);
-    
+
+    ENUM_ORDER_TYPE orderType = getBiasOrderType(biasType);
+
     // Khởi tạo lệnh đầu tiên
     ulong ticketId = PlaceOrder(orderType, 0.0, negativeVolumes[0], 0, 0);
-    
+
     // thêm id ticket vào mảng các ID theo type để dễ quản lý ticket nào thuộc loại nào
     AddTicketIdByType(biasType, ticketId);
-    
+
     double priceFirstEntry = 0;
     if(PositionSelectByTicket(ticketId)){
       priceFirstEntry = PositionGetDouble(POSITION_PRICE_OPEN);
     }
-    
+
     // gán biến toàn cục cho entry đầu tiên của bias type
     setFirstEntryByBiasType(biasType, priceFirstEntry);
-    
+
     TicketInfo firstTicket = {
       ticketId,
       negativeVolumes[0],
@@ -42,7 +42,7 @@ void initDCANegative(string biasType) {
         double price;
         double activePrice;
         int gap = i * jump;
-        if (orderTypeDailyBias == ORDER_TYPE_BUY) {
+        if (orderTypeBias == ORDER_TYPE_BUY) {
             price = priceFirstEntry - gap;
             activePrice = price - jump;
         }
@@ -66,7 +66,7 @@ void initDCANegative(string biasType) {
         string ticketFormat = StringFormat("DCA Âm %i %s %.2f %.3f %.3f", ticket.ticketId, ticket.state, ticket.volume, ticket.price, ticket.activePrice);
         Print(ticketFormat);
     }
-    
+
     // update lại mảng toàn cục negative cho bias type
     updateBiasArray(biasType, NEGATIVE_ARRAY, ticketInfos);
 }
@@ -78,19 +78,19 @@ void initDCANegative(string biasType) {
 // - Loại bỏ lệnh không còn đẹp
 //-------------------------------------------------------------
 void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
-  double currentPrice = getCurrentPrice(orderTypeDailyBias);
+  double currentPrice = getCurrentPrice(orderTypeBias);
 
-   ENUM_ORDER_TYPE orderTypeByBiasType = getOrderTypeByBiasType(biasType);
+   ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType);
    double firstEntryByBiasType = getPriceFirstEntryByBiasType(biasType);
   // Giá hiện tại đi thuận xu hướng thì thoát chứ không có quét qua mảng giá âm
   if ((orderTypeByBiasType == ORDER_TYPE_BUY && currentPrice > firstEntryByBiasType)
     || (orderTypeByBiasType == ORDER_TYPE_SELL && currentPrice < firstEntryByBiasType)) {
     return;
   }
-  
+
   TicketInfo negativeTicketsByBiasType[];
   getBiasArray(biasType, NEGATIVE_ARRAY, negativeTicketsByBiasType);
-  
+
   TicketInfo positiveTicketsByBiasType[];
   getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
 
@@ -113,7 +113,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
       continue;
     }
     // nếu là BUY thì check giá hiện tại bé hơn giá active thì đặt lệnh stop, còn nếu là sell thì check giá hiện tại lớn hơn giá active
-    
+
     bool checkPriceActive = orderTypeByBiasType == ORDER_TYPE_BUY ? currentPrice <= ticketInfo.activePrice : currentPrice >= ticketInfo.activePrice;
     if (checkPriceActive && ticketInfo.state == STATE_WAITING_STOP) {
       beautifulEntryIndex = (int)i;
@@ -127,7 +127,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
       break;
     }
   }
-   
+
   /*
 
   // dailyBiasNegative[1] là phần tử thứ 2 ở mảng DCA âm
@@ -151,7 +151,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
       }
       // không tồn tại entry DCA nào đang active ở điểm start DCA dương (isNotExistsDCAEntry = true) thì mới vào lại lệnh DCA dương
       if(isNotExistsDCAEntry){
-         double entryFirstDCA = orderTypeDailyBias == ORDER_TYPE_BUY ? priceFirstEntryDailyBias + 1 : priceFirstEntryDailyBias - 1;
+         double entryFirstDCA = orderTypeBias == ORDER_TYPE_BUY ? priceFirstEntryDailyBias + 1 : priceFirstEntryDailyBias - 1;
          orderStopFollowTrend(entryFirstDCA); // hàm này cộng sẵn 1 để xử lý cho việc khớp lệnh DCA nữa nên chỉ cần + 1 ở entryFirstDCA;
       }
   }
@@ -175,7 +175,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
        }
      }
   }
-  
+
   updateBiasArray(biasType, NEGATIVE_ARRAY, negativeTicketsByBiasType);
   updateBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
 }

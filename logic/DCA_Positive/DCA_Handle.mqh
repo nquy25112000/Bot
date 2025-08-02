@@ -7,9 +7,9 @@
 // nếu đã có 1 lệnh BUY đã vào lệnh là 3305 -> giá chạm 3306 thì đặt BUY STOP ở 3307, đồng thời dời SL của 3305 về 3305.5
 // tiếp tục nếu gá chạm 3307 thi đặt 1 lệnh BUY STOP ở 3308 đồng thời dời SL của 3305 và 3306 lên 3306.5
 void handleDCAPositive(ulong ticketId) {
-  
+
   string biasType = getBiasTypeByTicketId(ticketId);
-  ENUM_ORDER_TYPE orderType = getOrderTypeByBiasType(biasType);
+  ENUM_ORDER_TYPE orderType = getBiasOrderType(biasType);
   TicketInfo positiveTicketsByBiasType[];
   getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
 

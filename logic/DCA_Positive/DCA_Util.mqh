@@ -11,13 +11,13 @@ void AddPositiveTicketToArray(TicketInfo& arr[], const TicketInfo& value) {
 // đặt lệnh STOP DCA thuận xu hướng
 ulong orderStopFollowTrend(string biasType, double entry) {
 
-  ENUM_ORDER_TYPE orderType = getOrderTypeByBiasType(biasType);
-  
+  ENUM_ORDER_TYPE orderType = getBiasOrderType(biasType);
+
   double entryStop = orderType == ORDER_TYPE_BUY ? entry + 1 : entry - 1;
-  
+
   TicketInfo positiveTicketByBiasType[];
   getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketByBiasType);
-  
+
   // check xem trong mảng DCA dương có lệnh nào đang active stop với giá này không, nếu có thì không vào lệnh mà trả về ID ticket đó luôn
   for(uint i = 0; i < positiveTicketByBiasType.Size(); i++){
       TicketInfo ticket = positiveTicketByBiasType[i];
@@ -32,7 +32,7 @@ ulong orderStopFollowTrend(string biasType, double entry) {
   } else {
     ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, entryStop, dcaPositiveVol, 0, 0);
   }
-  
+
   // thêm ticketId vào mảng id theo loại
   AddTicketIdByType(biasType, ticketId);
 
@@ -44,7 +44,7 @@ ulong orderStopFollowTrend(string biasType, double entry) {
      entryStop
   };
   AddPositiveTicketToArray(positiveTicketByBiasType, ticket);
-  
+
   updateBiasArray(biasType, POSITIVE_ARRAY, positiveTicketByBiasType);
   return ticketId;
 }
