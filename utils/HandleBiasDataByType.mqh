@@ -149,7 +149,7 @@ ENUM_ORDER_TYPE getDailyBiasOrderType(){
    } else if (biasResult.type == "BUY") {
       return ORDER_TYPE_BUY;
    } else {
-     return;
+     return "NONE";
    }
 }
 
