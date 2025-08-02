@@ -71,9 +71,9 @@ bool ComputeNetAndLatest(const string &st[], int n,
 {
   int cnt=0; double sb=0,pb=0,ss=0,ps=0;
   ulong lt=0; double lp=0, lv=0; bool isB=false;
-  ScanArray(dailyBiasNegative,         st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(dailyBiasPositive, st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(dailyBiasFrozen,   st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(m_tickets,         st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(m_positiveTickets, st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+  ScanArray(m_frozenTickets,   st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
 
   if(cnt==0) return false;
   bVol=sb; sVol=ss;

@@ -132,26 +132,4 @@ void CloseAllPosition(){
 }
 
 
-//-----------------------------------------------------------------
-// getCurrentPrice
-// ---------------------------------------------------------------
-// Mục đích:
-//   - Trả về giá hiện tại theo loại lệnh:
-//       + BUY: trả về giá ASK (giá mua vào)
-//       + SELL: trả về giá BID (giá bán ra)
-//
-// Params:
-//   - type: loại lệnh (ORDER_TYPE_BUY hoặc ORDER_TYPE_SELL)
-//
-// Return:
-//   - Giá hiện tại phù hợp với loại lệnh
-//-----------------------------------------------------------------
-double getCurrentPrice(ENUM_ORDER_TYPE type)
-{
-   if (type == ORDER_TYPE_BUY)  return(SymbolInfoDouble(_Symbol, SYMBOL_ASK));
-   if (type == ORDER_TYPE_SELL) return(SymbolInfoDouble(_Symbol, SYMBOL_BID));
-   return(0.0);
-}
-
-
 #endif // __TRADE_SERVICE_MQH__
