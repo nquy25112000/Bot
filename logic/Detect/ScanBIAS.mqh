@@ -206,29 +206,35 @@ BiasResult DetectBias(const BiasConfig &cfg)
 }
 
 // ---------- GHI LOG JSON (tuỳ chọn) ------------------------------
+//--- biến đếm toàn cục (đã có sẵn nếu bạn dùng trước)
+//--- hàm log mới
 void LogBiasResultJSON(const BiasResult &r)
 {
+   // 1) Ghi file JSON như cũ
    string tfStr = (r.timeframe==BIAS_TF_H1 ? "H1" :
                    r.timeframe==BIAS_TF_H4 ? "H4" : "D1");
 
-   string json;
-   json  = "{\"symbol\":\""+r.symbol+"\","
-           "\"timeframe\":\""+tfStr+"\","
-           "\"bias\":\""+r.type+"\","
-           "\"score\":"+DoubleToString(r.percent,1)+","
-           "\"timestamp\":"+(string)r.patternTime+"}";
-
-   Print(json);
+   string json = "{\"symbol\":\""+r.symbol+"\","
+                 "\"timeframe\":\""+tfStr+"\","
+                 "\"bias\":\""+r.type+"\","
+                 "\"score\":"+DoubleToString(r.percent,1)+","
+                 "\"timestamp\":"+(string)r.patternTime+"}";
 
    int h = FileOpen("DetectBiasLog.json",
                     FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
-   if(h!=INVALID_HANDLE){
-      FileSeek(h,0,SEEK_END);
-      FileWrite(h,json);
-      FileClose(h);
-   }
+   if(h!=INVALID_HANDLE){ FileSeek(h,0,SEEK_END); FileWrite(h,json); FileClose(h); }
+
+   // 2) In ra log theo yêu cầu
+   MqlDateTime dt; TimeToStruct(r.patternTime, dt);
+   string ts = StringFormat("%04d-%02d-%02d: %02d:%02d",
+                            dt.year, dt.mon, dt.day, dt.hour, dt.min);
+
+   string pretty = StringFormat("[%s] %s - %s[%.1f]  >>> [%d - %d - %d]",
+                                ts, tfStr, r.type, r.percent,
+                                totalBuy, totalSell, totalNone);
+
+   Print(pretty);
 }
 
-// ---------- ALIAS GIỮ TƯƠNG THÍCH CŨ ---------------------------
 
 #endif // __SCAN_BIAS_MQH__
