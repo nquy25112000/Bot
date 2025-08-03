@@ -96,7 +96,8 @@ ENUM_ORDER_TYPE positionTypeToOrderType(ENUM_POSITION_TYPE positionType) {
 // hàm update lại price khi khớp lệnh và state cho nó. bởi vì có thể trượt giá khớp lệnh
 void updateTicketInfo(ulong ticketId, double price) {
   for (uint i = 0; i < negTicketList.Size(); i++) {
-    TicketInfo ticket = negTicketList[i];
+    TicketInfo ticket;
+    ticket = negTicketList[i];
     if (ticket.ticketId == ticketId) {
       ticket.state = STATE_OPEN;
       ticket.price = price;

@@ -4,7 +4,8 @@
 // Khi lệnh DCA SL thì gọi để update mảng thành CLOSE để khỏi quét qua lại nhiều lần
 void updateStateCloseDCAPositive(ulong ticketId) {
   for (uint i = 0; i < posTicketList.Size(); i++) {
-    TicketInfo ticket = posTicketList[i];
+    TicketInfo ticket;
+    ticket = posTicketList[i];
     if (ticket.ticketId == ticketId) {
       ticket.state = STATE_CLOSE;
       posTicketList[i] = ticket;

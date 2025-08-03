@@ -64,7 +64,8 @@ void initDCANegative(string biasType) {
     }
 
     for (uint i = 0; i < ticketInfos.Size();i++) {
-        TicketInfo ticket = ticketInfos[i];
+        TicketInfo ticket;
+        ticket = ticketInfos[i];
         string ticketFormat = StringFormat("DCA Âm %i %s %.2f %.3f %.3f", ticket.ticketId, ticket.state, ticket.volume, ticket.price, ticket.activePrice);
         Print(ticketFormat);
     }
@@ -104,7 +105,8 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
   // Scan qua mảng giá đã tạo rồi active lệnh khớp với điều kiện currentPrice <= ticketInfo.activePrice => DONE
   for (uint i = 1;i < negativeTicketsByBiasType.Size(); i++)
   {
-    TicketInfo ticketInfo = negativeTicketsByBiasType[i];
+    TicketInfo ticketInfo;
+    ticketInfo = negativeTicketsByBiasType[i];
     totalVolume = totalVolume + ticketInfo.volume;
     if (ticketInfo.state == STATE_OPEN) {
       totalVolume = 0; // tại vì nếu đã thuộc OPEN hoặc ACTIVE_STOP thì những lệnh phía trên nó đã được gộp vol vô lệnh này nên set 0 bắt đầu lại
@@ -167,7 +169,8 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
   // Clear lệnh xấu từ beautifulEntryIndex trở về trước => DONE
   if(beautifulEntryIndex >= 2){
      for (int i = 1; i < beautifulEntryIndex; i++) {
-       TicketInfo info = negativeTicketsByBiasType[i];
+       TicketInfo info;
+       info = negativeTicketsByBiasType[i];
        if (info.state != STATE_OPEN) {
          if (info.state == STATE_ACTIVE_STOP) {
            CloseByTicket(info.ticketId);

@@ -94,7 +94,8 @@ ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
    BiasConfig cfg;
    cfg.symbol = _Symbol;
    cfg.timeframe = biasType == DAILY_BIAS ? BIAS_TF_D1 : (biasType == H4_BIAS ? BIAS_TF_H4 : BIAS_TF_H1);
-   BiasResult biasResult = DetectBias(cfg);
+   BiasResult biasResult;
+   biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL") {
       return ORDER_TYPE_SELL;
    }

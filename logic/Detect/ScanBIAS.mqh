@@ -131,7 +131,8 @@ BiasResult DetectBias(const BiasConfig &cfg)
    else if(cfg.timeframe==BIAS_TF_H4) tf=PERIOD_H4;
 
    // 2) Đánh giá mẫu nến
-   PatternScore ps = AssessCandleTiered(cfg.symbol,tf,EVAL_SHIFT);
+   PatternScore ps;
+   ps = AssessCandleTiered(cfg.symbol,tf,EVAL_SHIFT);
    r.patternId       = ps.id;
    r.patternName     = ps.name;
    r.patternScore    = ps.score;

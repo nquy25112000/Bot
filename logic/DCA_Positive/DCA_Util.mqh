@@ -20,7 +20,8 @@ ulong orderStopFollowTrend(string biasType, double entry) {
 
   // check xem trong mảng DCA dương có lệnh nào đang active stop với giá này không, nếu có thì không vào lệnh mà trả về ID ticket đó luôn
   for (uint i = 0; i < positiveTicketByBiasType.Size(); i++) {
-    TicketInfo ticket = positiveTicketByBiasType[i];
+    TicketInfo ticket;
+    ticket = positiveTicketByBiasType[i];
     if (ticket.price == entryStop && ticket.state != STATE_CLOSE) {
       return ticket.ticketId;
     }

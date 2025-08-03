@@ -372,14 +372,18 @@ PatternScore AssessCandle(const string sym, ENUM_TIMEFRAMES tf = TF_DEFAULT, int
   CandleData c1,c2;
   if(!_GetCandle(sym,tf,shift,c1)) return none;
   double atr = _ATR(sym, tf, ATR_PERIOD, shift);
-  PatternScore best = _BuildSingle(c1, atr);
+  PatternScore best;
+  best = _BuildSingle(c1, atr);
   if(_GetCandle(sym,tf,shift+1,c2)) {
-    PatternScore p2 = _BuildDouble(c1,c2,atr);
+    PatternScore p2;
+    p2 = _BuildDouble(c1,c2,atr);
     if(p2.score > best.score) best = p2;
   }
-  PatternScore p3 = _BuildTriple(sym, tf, shift, atr, c1);
+  PatternScore p3;
+  p3 = _BuildTriple(sym, tf, shift, atr, c1);
   if(p3.score > best.score) best = p3;
-  PatternScore p5 = _BuildFive(sym, tf, shift, atr, c1);
+  PatternScore p5;
+  p5 = _BuildFive(sym, tf, shift, atr, c1);
   if(p5.score > best.score) best = p5;
   return best;
 }
@@ -414,21 +418,26 @@ PatternScore AssessCandleTiered(const string sym, ENUM_TIMEFRAMES tf = TF_DEFAUL
   if(!_GetCandle(sym,tf,shift,c1)) return out;
   double atr = _ATR(sym, tf, ATR_PERIOD, shift);
   // Tier 1: SINGLE
-  PatternScore p1 = _BuildSingle(c1, atr);
+  PatternScore p1;
+  p1 = _BuildSingle(c1, atr);
   if(_IsSingleStrong(p1) && _AcceptGood(p1, TIER1_STRONG_MIN_SCORE)) return p1;
   if(_AcceptGood(p1, TIER1_MIN_SCORE)) return p1;
   // Tier 2: DOUBLE
   if(!_GetCandle(sym,tf,shift+1,c2)) return (p1.id != PATTERN_NONE ? p1 : out);
-  PatternScore p2 = _BuildDouble(c1,c2,atr);
+  PatternScore p2;
+  p2 = _BuildDouble(c1,c2,atr);
   if(_AcceptGood(p2, TIER2_MIN_SCORE)) return p2;
   // Tier 3: TRIPLE
-  PatternScore p3 = _BuildTriple(sym, tf, shift, atr, c1);
+  PatternScore p3;
+  p3 = _BuildTriple(sym, tf, shift, atr, c1);
   if(_AcceptGood(p3, TIER3_MIN_SCORE)) return p3;
   // Tier 4: FIVE
-  PatternScore p5 = _BuildFive(sym, tf, shift, atr, c1);
+  PatternScore p5;
+  p5 = _BuildFive(sym, tf, shift, atr, c1);
   if(_AcceptGood(p5, TIER5_MIN_SCORE)) return p5;
   // fallback best
-  PatternScore best = p1;
+  PatternScore best;
+  best = p1;
   if(p2.score > best.score) best = p2;
   if(p3.score > best.score) best = p3;
   if(p5.score > best.score) best = p5;

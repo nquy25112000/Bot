@@ -23,7 +23,8 @@ void orderFrozenByTicketId(ulong frozenByTicketId){
 // đóng lệnh frozen và update lại state cho nó là close
 void closeFrozenActiveStopByTicketId(ulong frozenByTicketId){
    for(uint i = 0; i < frozTicketList.Size(); i++){
-      TicketInfo ticket = frozTicketList[i];
+      TicketInfo ticket;
+      ticket = frozTicketList[i];
       if(frozenByTicketId == ticket.frozenByTicketId && ticket.state == STATE_ACTIVE_FROZEN){
          CloseByTicket(ticket.ticketId);
          ticket.state = STATE_CLOSE;
@@ -35,7 +36,8 @@ void closeFrozenActiveStopByTicketId(ulong frozenByTicketId){
 // đóng tất cả lệnh frozentTicket;
 void closeAllFrozenTicket(){
    for(uint i = 0; i < frozTicketList.Size(); i++){
-      TicketInfo ticket = frozTicketList[i];
+      TicketInfo ticket;
+      ticket = frozTicketList[i];
       if(ticket.state == STATE_OPEN_FROZEN){
          CloseByTicket(ticket.ticketId);
          ticket.state = STATE_CLOSE;
@@ -47,7 +49,8 @@ void closeAllFrozenTicket(){
 // update lại state khi khớp lệnh frozen
 void updateFrozenInfo(ulong ticketId){
    for(uint i = 0; i < frozTicketList.Size(); i++){
-      TicketInfo ticket = frozTicketList[i];
+      TicketInfo ticket;
+      ticket = frozTicketList[i];
       if(ticket.ticketId == ticketId){
          ticket.state = STATE_OPEN_FROZEN;
          frozTicketList[i] = ticket;
@@ -65,7 +68,8 @@ void AddFrozenTicketToArray(TicketInfo& arr[], const TicketInfo& value) {
 // check xem thử ticketDCA có frozen nào đang open không
 bool isExistsFrozenOpen(double frozenByTicketId){
    for(uint i = 0; i < frozTicketList.Size(); i++){
-      TicketInfo ticket = frozTicketList[i];
+      TicketInfo ticket;
+      ticket = frozTicketList[i];
       if(ticket.frozenByTicketId == frozenByTicketId && ticket.state == STATE_OPEN_FROZEN){
          return true;
       }
