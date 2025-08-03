@@ -1,119 +1,109 @@
 //+------------------------------------------------------------------+
-//| AI_Detect.mqh – khởi chạy BiasService + gửi bars lấy BiasResult  |
+//| AI_Detect.mqh – khởi chạy BiasService + lấy BiasResult           |
 //+------------------------------------------------------------------+
 #ifndef __AI_DETECT_MQH__
 #define __AI_DETECT_MQH__
 
-//──── 1. WinExec để chạy StartBiasService.cmd ──────────────────────
+//── WinExec (ẩn cửa sổ .cmd) ───────────────────────────────────────
 #import "kernel32.dll"
-   int  WinExec(string cmd, int nShow);      // nShow = 0 ẩn cửa sổ
+   int  WinExec(const string lpCmdLine, uint uCmdShow);
 #import
 
-//──── 2. Inputs cấu hình ───────────────────────────────────────────
-input bool   Skip_StartBiasService      = false;   // tự chạy service trước
-input bool   Allow_Init_Without_Service = true;    // cho EA chạy dù service offline
-input int    WaitOnlineSec              = 20;      // max chờ service online
-input string HealthURL                  = "http://127.0.0.1:8000/healthz";
-input string BiasService_URL            = "http://127.0.0.1:8000/analyze";
-input int    BiasService_TimeoutMs      = 30000;   // timeout POST (ms)
-input int    Bars_To_Send               = 20;      // số nến gửi AI
+//── Tham số cấu hình (  để EA chỉnh) ──────────────────────────
+  bool   Skip_StartBiasService      = false;
+  bool   Allow_Init_Without_Service = true;
+  int    WaitOnlineSec              = 20;
+  string HealthURL                  = "http://127.0.0.1:8000/healthz";
+  string BiasService_URL            = "http://127.0.0.1:8000/analyze";
+  int    BiasService_TimeoutMs      = 30000;
+  int    Bars_To_Send               = 20;
 
 #define MAX_WAIT_MS (WaitOnlineSec*1000)
 
-//──── 3. Khởi chạy / health-check BiasService ──────────────────────
+//────────────────────────────────────────────────────────────────────
+// 1) Khởi động / kiểm tra BiasService
+//────────────────────────────────────────────────────────────────────
 bool StartBiasService()
 {
-   uchar  dummy_send[];                    // body trống
-   uchar  resp[];  string hdr="";
+   uchar dummy[]; uchar resp[]; string hdr="";
 
    if(Skip_StartBiasService) return true;
 
-   // ① thử healthz
-   if(WebRequest("GET",HealthURL,"",3000,dummy_send,0,resp,hdr) == 200)
-   {  Print("🟢 BiasService đã chạy.");  return true; }
+   // Đã online?
+   if(WebRequest("GET", HealthURL, "", 3000, dummy, resp, hdr) == 200)
+   {  Print("🟢 BiasService đã chạy."); return true; }
 
-   Print("ℹ️  BiasService chưa chạy – khởi động…");
+   Print("ℹ️  Khởi động BiasService…");
 
-   // ② tìm StartBiasService.cmd
-   string eaPath = MQLInfoString(MQL_PROGRAM_PATH);
-   int p = StringFind(eaPath,"\\Experts\\");
-   if(p<0){ Print("❌ Không tìm thấy \\Experts\\."); return false; }
+   string ea = MQLInfoString(MQL_PROGRAM_PATH);
+   int p = StringFind(ea, "\\Experts\\");
+   if(p < 0){ Print("❌ Không tìm thấy \\Experts\\."); return false; }
 
-   string expertsDir = StringSubstr(eaPath,0,p+8);
-   string cmdFile = expertsDir+"\\Advisors\\Bot\\logic\\Detect\\BiasService\\StartBiasService.cmd";
-   if(!FileIsExist(cmdFile)){ PrintFormat("❌ Thiếu %s",cmdFile); return false; }
+   string cmd = StringSubstr(ea,0,p+8)+"\\Advisors\\Bot\\logic\\Detect\\BiasService\\StartBiasService.cmd";
+   if(!FileIsExist(cmd)){ PrintFormat("❌ Thiếu %s",cmd); return false; }
 
-   // ③ WinExec
-   if(WinExec(cmdFile,0) < 31){ Print("❌ WinExec lỗi – kiểm DLL."); return false; }
+   if(WinExec(cmd,0) < 31){ Print("❌ WinExec lỗi."); return false; }
 
-   // ④ chờ online
    ulong t0 = GetTickCount();
    while(GetTickCount()-t0 < MAX_WAIT_MS)
    {
-      if(WebRequest("GET",HealthURL,"",1500,dummy_send,0,resp,hdr) == 200)
-      {  Print("✅ BiasService online");  return true; }
+      if(WebRequest("GET", HealthURL, "", 1500, dummy, resp, hdr) == 200)
+      {  Print("✅ BiasService online"); return true; }
       Sleep(500);
    }
-   PrintFormat("⚠️  Chưa online sau %d s.", WaitOnlineSec);
+   PrintFormat("⚠️  Chưa online sau %d giây", WaitOnlineSec);
    return false;
 }
 
 bool EnsureBiasService()
 {
-   if(StartBiasService())       return true;
+   if(StartBiasService()) return true;
    if(Allow_Init_Without_Service)
-   {  Print("⚠️  Chạy EA dù BiasService offline"); return true; }
+   { Print("⚠️  Tiếp tục chạy dù BiasService offline"); return true; }
    return false;
 }
 
-//──── 4. Tạo JSON body từ bars ─────────────────────────────────────
-string BuildRequestBody(const string symbol,const ENUM_TIMEFRAMES tf,int bars_n)
+//────────────────────────────────────────────────────────────────────
+// 2) Build JSON body gửi AI
+//────────────────────────────────────────────────────────────────────
+string BuildRequestBody(const string sym,const ENUM_TIMEFRAMES tf,int bars_n)
 {
-   MqlRates rates[];
-   int copied = CopyRates(symbol, tf, 1, bars_n, rates);
-   if(copied<=0){ PrintFormat("CopyRates err %d", GetLastError()); return ""; }
+   MqlRates r[]; int n=CopyRates(sym,tf,1,bars_n,r);
+   if(n<=0){ Print("CopyRates err ",GetLastError()); return""; }
 
-   string bars="[";
-   for(int i=copied-1;i>=0;i--)               // cũ → mới
+   string js="[";                       // bars JSON
+   for(int i=n-1;i>=0;i--)
    {
-      if(i!=copied-1) bars+=",";
-      bars += StringFormat(
-              "{\"t\":%d,\"o\":%.5f,\"h\":%.5f,\"l\":%.5f,\"c\":%.5f}",
-              rates[i].time,rates[i].open,rates[i].high,rates[i].low,rates[i].close);
+      if(i!=n-1) js+=",";
+      js+=StringFormat("{\"t\":%d,\"o\":%.5f,\"h\":%.5f,\"l\":%.5f,\"c\":%.5f}",
+                       r[i].time,r[i].open,r[i].high,r[i].low,r[i].close);
    }
-   bars+="]";
-
-   string tf_s = (tf==PERIOD_D1?"D1": tf==PERIOD_H4?"H4":"H1");
-   return StringFormat("{\"symbol\":\"%s\",\"timeframe\":\"%s\",\"bars\":%s}", symbol, tf_s, bars);
+   js+="]";
+   string tf_s=(tf==PERIOD_D1?"D1":tf==PERIOD_H4?"H4":"H1");
+   return StringFormat("{\"symbol\":\"%s\",\"timeframe\":\"%s\",\"bars\":%s}",sym,tf_s,js);
 }
 
-//──── 5. Gửi & Parse BiasResult ────────────────────────────────────
-bool ParseBiasResultFromJson(const string json, BiasResult &out);   // phải implement ở file khác
+//────────────────────────────────────────────────────────────────────
+// 3) Gửi & parse BiasResult
+//────────────────────────────────────────────────────────────────────
+bool ParseBiasResultFromJson(const string json, BiasResult &out); // bạn cài đặt
 
-bool RequestBias(const string symbol,const ENUM_TIMEFRAMES tf,BiasResult &out)
+bool RequestBias(const string sym,const ENUM_TIMEFRAMES tf,BiasResult &out)
 {
-   string body = BuildRequestBody(symbol, tf, Bars_To_Send);
-   if(StringLen(body)==0) return false;
+   string body=BuildRequestBody(sym,tf,Bars_To_Send); if(body=="") return false;
 
-   uchar  bytes[];   int len = StringToCharArray(body, bytes, 0, CP_UTF8);
-   string headers = "Content-Type: application/json\r\n";
+   uchar data[]; int len=StringToCharArray(body,data,0,CP_UTF8);
+   uchar resp[]; string hdr="";
 
-   char   resp[];
-   string respHdr="";
-   ResetLastError();
-   int code = WebRequest("POST", BiasService_URL, headers,
-                         BiasService_TimeoutMs,
-                         bytes, len,
-                         resp, respHdr);
+   int code=WebRequest("POST", BiasService_URL, "Content-Type: application/json\r\n",
+                       BiasService_TimeoutMs,
+                       data, resp, hdr);
 
-   if(code != 200)
-   {  PrintFormat("BiasService HTTP %d (Err=%d)", code, GetLastError()); return false; }
+   if(code!=200){ Print("BiasService HTTP ",code," err=",GetLastError()); return false; }
 
-   string json = CharArrayToString(resp);
-   if(!ParseBiasResultFromJson(json, out))
-   {  Print("ParseBiasResultFromJson fail"); return false; }
+   string json=CharArrayToString(resp);
+   if(!ParseBiasResultFromJson(json,out)){ Print("ParseBiasResultFromJson fail"); return false; }
 
-   // out.timeframe nên gán trong ParseBiasResultFromJson; nếu không, sửa tại đây.
    return true;
 }
 
