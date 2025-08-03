@@ -3,8 +3,7 @@
 
 int OnInit()
 {
-  StartBiasService();
-  
+  if(!EnsureBiasService()) return(INIT_FAILED);
   InitializeBiasIndicators(_Symbol);
   EventSetTimer(1);
   return(INIT_SUCCEEDED);

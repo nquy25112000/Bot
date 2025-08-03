@@ -13,11 +13,11 @@ CTrade trade;
 #include "../logic/Detect/ScanBIAS.mqh"
 #include "../logic/Detect/LogicBIAS.mqh"
 #include "../logic/Detect/CandlePattern.mqh"
+#include "../logic/Detect/AI_Detect.mqh"
 
 #include "../logic/SignalService.mqh"
 #include "../logic/TicketService.mqh"
 #include "../logic/TradeService.mqh"
-#include "../logic/Detect/StartBiasService.mqh"
 #include "..\\logic\\Hedging\\Helper_Hybrid.mqh"
 #include "..\\logic\\Hedging\\Hedging_Hybrid_Dynamic.mqh"
 
