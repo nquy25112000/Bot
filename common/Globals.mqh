@@ -65,9 +65,9 @@ TicketInfo posTicketList[];
 // frozTicketList là danh sách các lệnh đóng băng cho lệnh DCA dương
 TicketInfo frozTicketList[];
 
-ulong dailyBiasTicketIds[];
-ulong h4BiasTicketIds[];
-ulong h1BiasTicketIds[];
+ulong D1_ticketIds[];
+ulong H4_ticketIds[];
+ulong H1_ticketIds[];
 
 
 // targetByIndex để xác định nó đang ở vị trí bao nhiêu trong negD1volumes, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác

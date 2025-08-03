@@ -52,7 +52,7 @@ void clearDataByType(string biasType) {
 
 // thêm phần tử vào mảng các mảng theo loại để xác định ticket nào thuộc loại nào
 void AddTicketIdByType(string biasType, ulong ticketId) {
-   AddTicketIdToArray(dailyBiasTicketIds, ticketId);
+   AddTicketIdToArray(D1_ticketIds, ticketId);
 }
 
 // Thêm phần tử vào mảng
@@ -121,18 +121,18 @@ double getPriceFirstEntryByBiasType(string biasType) {
 }
 
 string getBiasTypeByTicketId(ulong ticketId) {
-   for (uint i = 0; i < dailyBiasTicketIds.Size(); i++) {
-      if (ticketId == dailyBiasTicketIds[i]) {
+   for (uint i = 0; i < D1_ticketIds.Size(); i++) {
+      if (ticketId == D1_ticketIds[i]) {
          return DAILY_BIAS;
       }
    }
-   for (uint i = 0; i < h4BiasTicketIds.Size(); i++) {
-      if (ticketId == h4BiasTicketIds[i]) {
+   for (uint i = 0; i < H4_ticketIds.Size(); i++) {
+      if (ticketId == H4_ticketIds[i]) {
          return H4_BIAS;
       }
    }
-   for (uint i = 0; i < h1BiasTicketIds.Size(); i++) {
-      if (ticketId == h1BiasTicketIds[i]) {
+   for (uint i = 0; i < H1_ticketIds.Size(); i++) {
+      if (ticketId == H1_ticketIds[i]) {
          return H1_BIAS;
       }
    }

@@ -7,8 +7,6 @@
 //-------------------------------------------------------------
 void startBias(string biasType) {
 
-  orderTypeBias = getBiasOrderType(biasType);
-
   dailyBiasRuning = true;
   ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType);
   double currentPrice = getCurrentPrice(orderTypeByBiasType);
