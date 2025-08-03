@@ -44,22 +44,10 @@ void updateDailyBiasArray(string arrayType, TicketInfo& result[]) {
 }
 
 
-void clearDataByType(string biasType) {
+void clearDataByType() {
    ArrayFree(negTicketList);
    ArrayFree(posTicketList);
    ArrayFree(frozTicketList);
-}
-
-// thêm phần tử vào mảng các mảng theo loại để xác định ticket nào thuộc loại nào
-void AddTicketIdByType(string biasType, ulong ticketId) {
-   AddTicketIdToArray(D1_ticketIds, ticketId);
-}
-
-// Thêm phần tử vào mảng
-void AddTicketIdToArray(ulong& arr[], ulong value) {
-   int size = ArraySize(arr);
-   ArrayResize(arr, size + 1);
-   arr[size] = value;
 }
 
 // lấy danh sách volume negative theo type
@@ -75,17 +63,6 @@ void GetVolumeNegativeByType(string biasType, double& destination[]) {
    }
 }
 
-void setFirstEntryByBiasType(string biasType, double firstEntry) {
-   if (biasType == DAILY_BIAS) {
-      initEntryD1 = firstEntry;
-   }
-   else if (biasType == H4_BIAS) {
-      initEntryD1 = firstEntry; // cần viết lại firstEntry cho H4
-   }
-   else if (biasType == H1_BIAS) {
-      initEntryD1 = firstEntry; // cần viết lại firstEntry cho H1
-   }
-}
 
 
 
@@ -97,9 +74,11 @@ ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
    BiasResult biasResult;
    biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL") {
+      isRunningBIAS = true;
       return ORDER_TYPE_SELL;
    }
    else if (biasResult.type == "BUY") {
+      isRunningBIAS = true;
       return ORDER_TYPE_BUY;
    }
    else {
@@ -117,21 +96,9 @@ ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
       }
 
    }
-    return NULL;
+   return NULL;
 }
 
 
-double getPriceFirstEntryByBiasType(string biasType) {
-   if (biasType == DAILY_BIAS) {
-      return initEntryD1;
-   }
-   else if (biasType == H4_BIAS) {
-      return initEntryH4;
-   }
-   else if (biasType == H1_BIAS) {
-      return initEntryH1;
-   }
-   return 0;
-}
 
 #endif // __BIAS_DATA_BY_TYPE_MQH__

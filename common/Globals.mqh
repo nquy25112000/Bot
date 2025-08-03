@@ -49,14 +49,14 @@ datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
 int negativeTicketIndex = 0;
 // target lợi nhuận mỗi ngày
-double targetProfitDailyBias = 900;
+double maxProfit = 900;
 
 // negD1volumes danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 // mảng 10 phần tử để test
 // static const double negD1volumes[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
-double negD1volumes[19]    = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
-double negH4volumes[19]    = {0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02};
-double negH1volumes[19]    = {0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02};
+double negD1volumes[19] = { 0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
+double negH4volumes[19] = { 0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02 };
+double negH1volumes[19] = { 0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02 };
 
 
 // negTicketList là danh sách ticket tương ứng với negD1volumes
@@ -65,10 +65,6 @@ TicketInfo negTicketList[];
 TicketInfo posTicketList[];
 // frozTicketList là danh sách các lệnh đóng băng cho lệnh DCA dương
 TicketInfo frozTicketList[];
-
-ulong D1_ticketIds[];
-ulong H4_ticketIds[];
-ulong H1_ticketIds[];
 
 
 // targetByIndex để xác định nó đang ở vị trí bao nhiêu trong negD1volumes, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác
@@ -84,20 +80,13 @@ ENUM_ORDER_TYPE orderTypeBias;
 ENUM_ORDER_TYPE orderTypeH4Bias;
 ENUM_ORDER_TYPE orderTypeH1Bias;
 
-// dailyBiasRuning xác định nó có trạng thái nào. 0 là không chạy, 1 là đang chạy. để dùng cho logic start dailybias và scan daily bias
-bool dailyBiasRuning = false;
-// initEntryD1 xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
-double initEntryD1;
-// DCA Dương mỗi vol mặc định 0.1
-double dcaPositiveVol = 0.1;
+// isRunningBIAS xác định nó có trạng thái nào. 0 là không chạy, 1 là đang chạy. để dùng cho logic start dailybias và scan daily bias
+bool isRunningBIAS = false;
+// priceInitEntry xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
+double priceInitEntry;
 
-bool h4BiasRuning = false;
-double initEntryH4;
-double dcaPositiveVolH4 = 0.08;
+double dcaPositiveVol;
 
-bool h1BiasRuning = false;
-double initEntryH1;
-double dcaPositiveVolH1 = 0.06;
 
 string HEDGE_COMMENT_PREFIX = "HEDGE";
 int    HEDGE_MAGIC = 20250727;

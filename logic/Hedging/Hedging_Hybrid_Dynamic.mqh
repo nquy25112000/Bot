@@ -90,8 +90,7 @@ void Hedging_Hybrid_Dynamic(string &listState[], int nStates,
                             const TriggerCfg &tg, HybridCfg &cfg)
 {
   // [G0] Vệ sinh pending cũ & guard spread
-  CTrade trade;
-  if(cfg.pendingTTLsec>0) CancelExpiredPendingsByPrefix(trade, "HEDGE_", cfg.pendingTTLsec);
+  if(cfg.pendingTTLsec>0) CancelExpiredPendingsByPrefix("HEDGE_", cfg.pendingTTLsec);
   if(tg.maxSpread_usd > 0 && !SpreadOK(tg.maxSpread_usd)){ Print("[HEDGE] Spread lớn, hoãn."); return; }
 
   // [S1] Scan cụm vé theo COMMENT
@@ -172,12 +171,12 @@ void Hedging_Hybrid_Dynamic(string &listState[], int nStates,
   if(volT_sell>0 && !PendingExistsKey("HEDGE_TUN",1,1)){
     double e=lower, sl=upper, tp=Nd(lower - cfg.D_TP_usd);
     if(CountPendingByPrefix("HEDGE_") < cfg.maxPending)
-      PlaceSellStopPrefix(trade, HEDGE_MAGIC, volT_sell, e, sl, tp, "HEDGE_TUN", 1, 1);
+      PlaceSellStopPrefix(HEDGE_MAGIC, volT_sell, e, sl, tp, "HEDGE_TUN", 1, 1);
   }
   if(volT_buy>0 && !PendingExistsKey("HEDGE_TUN",1,2)){
     double e=upper, sl=lower, tp=Nd(upper + cfg.D_TP_usd);
     if(CountPendingByPrefix("HEDGE_") < cfg.maxPending)
-      PlaceBuyStopPrefix(trade, HEDGE_MAGIC, volT_buy, e, sl, tp, "HEDGE_TUN", 1, 2);
+      PlaceBuyStopPrefix(HEDGE_MAGIC, volT_buy, e, sl, tp, "HEDGE_TUN", 1, 2);
   }
 
   // [MOM] Momentum SELL ladder
@@ -204,7 +203,7 @@ void Hedging_Hybrid_Dynamic(string &listState[], int nStates,
     double entry=Nd(lastLow - cfg.momOffsets_usd[i]);
     double sl=Nd(entry + slDist);
 
-    PlaceSellStopPrefix(trade, HEDGE_MAGIC, vol, entry, sl, 0.0, "HEDGE_MOM", 1, i+1);
+    PlaceSellStopPrefix(HEDGE_MAGIC, vol, entry, sl, 0.0, "HEDGE_MOM", 1, i+1);
   }
 
   // [TP] TP gộp + trailing lock
@@ -226,19 +225,19 @@ void Hedging_Hybrid_Dynamic(string &listState[], int nStates,
   peakAll = MathMax(peakAll, pnlAll);
 
   if(cfg.tpMomCents>0 && targMom>0){
-    if(pnlMom >= targMom) CloseAllByPrefix(trade, "HEDGE_MOM");
+    if(pnlMom >= targMom) CloseAllByPrefix("HEDGE_MOM");
     else if(cfg.trailingLockPct>0 && peakMom>=targMom && pnlMom <= peakMom*(1.0 - cfg.trailingLockPct))
-      CloseAllByPrefix(trade, "HEDGE_MOM");
+      CloseAllByPrefix("HEDGE_MOM");
   }
   if(cfg.tpTunCents>0 && targTun>0){
-    if(pnlTun >= targTun) CloseAllByPrefix(trade, "HEDGE_TUN");
+    if(pnlTun >= targTun) CloseAllByPrefix("HEDGE_TUN");
     else if(cfg.trailingLockPct>0 && peakTun>=targTun && pnlTun <= peakTun*(1.0 - cfg.trailingLockPct))
-      CloseAllByPrefix(trade, "HEDGE_TUN");
+      CloseAllByPrefix("HEDGE_TUN");
   }
   if(cfg.tpAllCents>0 && targAll>0){
-    if(pnlAll >= targAll) CloseAllByPrefix(trade, "HEDGE_");
+    if(pnlAll >= targAll) CloseAllByPrefix("HEDGE_");
     else if(cfg.trailingLockPct>0 && peakAll>=targAll && pnlAll <= peakAll*(1.0 - cfg.trailingLockPct))
-      CloseAllByPrefix(trade, "HEDGE_");
+      CloseAllByPrefix("HEDGE_");
   }
 }
 

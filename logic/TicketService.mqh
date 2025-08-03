@@ -32,13 +32,13 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
             // tổng lợi nhuận từ lúc start dailyBias lớn hơn targetCentDailyBias dù còn lệnh frozen thì đóng tất cả luôn
             if(totalProfitFromTime >= targetCentDailyBias){
                CloseAllPosition();
-               dailyBiasRuning = 0;
+               isRunningBIAS = 0;
             } else {
                // đoạn này kích hoạt hedging cho các lệnh frozen nếu còn lệnh nhưng chưa có logic hedging thì tạm đóng all lệnh và ngừng dailybias
                ArrayFree(negTicketList);
                ArrayFree(posTicketList);
                CloseAllPosition();
-               dailyBiasRuning = 0;
+               isRunningBIAS = 0;
             }
          }
          else if (reason == DEAL_REASON_SL) {

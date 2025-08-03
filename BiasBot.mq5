@@ -51,7 +51,7 @@ void OnTimer() {
     // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
 
-  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !dailyBiasRuning) {
+  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !isRunningBIAS) {
     startBias(DAILY_BIAS);
     dailyBiasStartTime = now;
   }
@@ -66,7 +66,7 @@ void OnTimer() {
   //   Hedging_Hybrid_Dynamic(states, ArraySize(states), TG, CFG);
   // }
 
-  if (dailyBiasRuning) {
+  if (isRunningBIAS) {
     scanDCANegative(DAILY_BIAS);
   }
 

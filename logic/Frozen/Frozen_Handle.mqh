@@ -4,16 +4,16 @@
 void orderFrozenByTicketId(ulong frozenByTicketId){
    ulong ticketId;
     if (orderTypeBias == ORDER_TYPE_BUY) { // frozen thì ngược lại xu hướng để đóng băng
-      ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, initEntryD1, dcaPositiveVol, 0, 0); // dùng đúng vol đã vào lệnh DCA dương
+      ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, priceInitEntry, dcaPositiveVol, 0, 0); // dùng đúng vol đã vào lệnh DCA dương
     }
     else {
-      ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, initEntryD1, dcaPositiveVol, 0, 0);
+      ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, priceInitEntry, dcaPositiveVol, 0, 0);
     }
     TicketInfo ticket = {
      ticketId,
      dcaPositiveVol,
      STATE_ACTIVE_FROZEN,
-     initEntryD1,
+     priceInitEntry,
      0,
      frozenByTicketId,
     };

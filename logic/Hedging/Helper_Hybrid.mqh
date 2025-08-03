@@ -240,7 +240,7 @@ double CentsToMoney(double cents, double lots)
 }
 
 // (5d) Đóng tất cả vị thế có prefix
-void CloseAllByPrefix(CTrade &trade, const string &prefix)
+void CloseAllByPrefix(const string &prefix)
 {
   CPositionInfo pos;
   for(int i=PositionsTotal()-1;i>=0;--i){
@@ -257,7 +257,7 @@ void CloseAllByPrefix(CTrade &trade, const string &prefix)
 
 //---------------- (6) WRAP ĐẶT PENDING --------------------------//
 // (6a) SELL_STOP có prefix + magic
-bool PlaceSellStopPrefix(CTrade &trade, int magic, double vol, double entry, double sl, double tp,
+bool PlaceSellStopPrefix(int magic, double vol, double entry, double sl, double tp,
                          const string &prefix, int roundIdx, int legIdx)
 {
   if(vol<=0) return false;
@@ -274,7 +274,7 @@ bool PlaceSellStopPrefix(CTrade &trade, int magic, double vol, double entry, dou
 }
 
 // (6b) BUY_STOP có prefix + magic
-bool PlaceBuyStopPrefix(CTrade &trade, int magic, double vol, double entry, double sl, double tp,
+bool PlaceBuyStopPrefix(int magic, double vol, double entry, double sl, double tp,
                         const string &prefix, int roundIdx, int legIdx)
 {
   if(vol<=0) return false;
@@ -356,7 +356,7 @@ bool PendingExistsKey(const string &prefix, int roundIdx, int legIdx){
 }
 
 // (8d) Hủy pending quá TTL (giây)
-int CancelExpiredPendingsByPrefix(CTrade &trade, const string &prefix, int ttl_seconds){
+int CancelExpiredPendingsByPrefix(const string &prefix, int ttl_seconds){
   int killed=0; datetime now=TimeCurrent(); int total=OrdersTotal();
   for(int i=total-1;i>=0;--i){
     ulong tk = OrderGetTicket(i);
