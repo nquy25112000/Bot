@@ -50,15 +50,15 @@ int negativeTicketIndex = 0;
 // target lợi nhuận mỗi ngày
 double targetProfitDailyBias = 900;
 
-// dailyBiasNegativeVolume danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
+// negD1volumes danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 // mảng 10 phần tử để test
-// static const double dailyBiasNegativeVolume[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
-double dailyBiasNegativeVolume[19] = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
-double h4BiasNegativeVolume[19]    = {0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02};
-double h1BiasNegativeVolume[19]    = {0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02};
+// static const double negD1volumes[10] = { 0.05,0.07,0.09,0.11,0.13,0.16,0.16,0.13,0.09,0.07 };
+double negD1volumes[19]    = {0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
+double negH4volumes[19]    = {0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02};
+double negH1volumes[19]    = {0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02};
 
 
-// negTicketList là danh sách ticket tương ứng với dailyBiasNegativeVolume
+// negTicketList là danh sách ticket tương ứng với negD1volumes
 TicketInfo negTicketList[];
 // posTicketList là danh sách các ticket  dùng cho DCA dương để xác định điểm đó đã được gán lệnh để giá quét qua lại nhiều lần không vào thêm lệnh mới
 TicketInfo posTicketList[];
@@ -78,7 +78,7 @@ ulong h4BiasTicketIds[];
 ulong h1BiasTicketIds[];
 
 
-// targetByIndex để xác định nó đang ở vị trí bao nhiêu trong dailyBiasNegativeVolume, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác
+// targetByIndex để xác định nó đang ở vị trí bao nhiêu trong negD1volumes, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác
 int    targetByIndex1, targetByIndex2;
 
 int totalSell = 0;

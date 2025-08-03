@@ -65,13 +65,13 @@ void AddTicketIdToArray(ulong& arr[], ulong value) {
 // lấy danh sách volume negative theo type
 void GetVolumeNegativeByType(string biasType, double& destination[]) {
    if (biasType == DAILY_BIAS) {
-      ArrayCopy(destination, dailyBiasNegativeVolume);
+      ArrayCopy(destination, negD1volumes);
    }
    else if (biasType == H4_BIAS) {
-      ArrayCopy(destination, dailyBiasNegativeVolume); // cần viết lại mảng negative volume cho H4
+      ArrayCopy(destination, negH4volumes);
    }
    else if (biasType == H1_BIAS) {
-      ArrayCopy(destination, dailyBiasNegativeVolume); // cần viết lại mảng negative volume cho H1
+      ArrayCopy(destination, negH1volumes);
    }
 }
 
