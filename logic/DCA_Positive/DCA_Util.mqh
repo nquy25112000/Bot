@@ -16,20 +16,21 @@ ulong orderStopFollowTrend(string biasType, double entry) {
   double entryStop = orderType == ORDER_TYPE_BUY ? entry + 1 : entry - 1;
 
   TicketInfo positiveTicketByBiasType[];
-  getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketByBiasType);
+  getBiasArray(POSITIVE_ARRAY, positiveTicketByBiasType);
 
   // check xem trong mảng DCA dương có lệnh nào đang active stop với giá này không, nếu có thì không vào lệnh mà trả về ID ticket đó luôn
-  for(uint i = 0; i < positiveTicketByBiasType.Size(); i++){
-      TicketInfo ticket = positiveTicketByBiasType[i];
-      if(ticket.price == entryStop && ticket.state != STATE_CLOSE){
-         return ticket.ticketId;
-      }
+  for (uint i = 0; i < positiveTicketByBiasType.Size(); i++) {
+    TicketInfo ticket = positiveTicketByBiasType[i];
+    if (ticket.price == entryStop && ticket.state != STATE_CLOSE) {
+      return ticket.ticketId;
+    }
   }
 
   ulong ticketId;
   if (orderType == ORDER_TYPE_BUY) {
     ticketId = PlaceOrder(ORDER_TYPE_BUY_STOP, entryStop, dcaPositiveVol, 0, 0);
-  } else {
+  }
+  else {
     ticketId = PlaceOrder(ORDER_TYPE_SELL_STOP, entryStop, dcaPositiveVol, 0, 0);
   }
 
@@ -45,7 +46,7 @@ ulong orderStopFollowTrend(string biasType, double entry) {
   };
   AddPositiveTicketToArray(positiveTicketByBiasType, ticket);
 
-  updateBiasArray(biasType, POSITIVE_ARRAY, positiveTicketByBiasType);
+  updateBiasArray(POSITIVE_ARRAY, positiveTicketByBiasType);
   return ticketId;
 }
 

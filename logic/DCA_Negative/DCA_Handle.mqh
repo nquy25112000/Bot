@@ -68,7 +68,7 @@ void initDCANegative(string biasType) {
     }
 
     // update lại mảng toàn cục negative cho bias type
-    updateBiasArray(biasType, NEGATIVE_ARRAY, ticketInfos);
+    updateBiasArray(NEGATIVE_ARRAY, ticketInfos);
 }
 
 //-------------------------------------------------------------
@@ -89,10 +89,10 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
   }
 
   TicketInfo negativeTicketsByBiasType[];
-  getBiasArray(biasType, NEGATIVE_ARRAY, negativeTicketsByBiasType);
+  getBiasArray(NEGATIVE_ARRAY, negativeTicketsByBiasType);
 
   TicketInfo positiveTicketsByBiasType[];
-  getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
+  getBiasArray(POSITIVE_ARRAY, positiveTicketsByBiasType);
 
   int beautifulEntryIndex = 0;
   // totalVolume để tính tổng vol của các lệnh trước đó gộp lại cho lệnh ở vị trí đẹp nhất
@@ -176,8 +176,8 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
      }
   }
 
-  updateBiasArray(biasType, NEGATIVE_ARRAY, negativeTicketsByBiasType);
-  updateBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
+  updateBiasArray(NEGATIVE_ARRAY, negativeTicketsByBiasType);
+  updateBiasArray(POSITIVE_ARRAY, positiveTicketsByBiasType);
 }
 
 

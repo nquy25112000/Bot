@@ -11,7 +11,7 @@ void handleDCAPositive(ulong ticketId) {
   string biasType = getBiasTypeByTicketId(ticketId);
   ENUM_ORDER_TYPE orderType = getBiasOrderType(biasType);
   TicketInfo positiveTicketsByBiasType[];
-  getBiasArray(biasType, POSITIVE_ARRAY, positiveTicketsByBiasType);
+  getBiasArray(POSITIVE_ARRAY, positiveTicketsByBiasType);
 
   double entryToNextAction = 0;
   for (uint i = 0; i < positiveTicketsByBiasType.Size(); i++) {
