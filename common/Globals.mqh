@@ -93,18 +93,18 @@ ENUM_ORDER_TYPE orderTypeH1Bias;
 
 // dailyBiasRuning xác định nó có trạng thái nào. 0 là không chạy, 1 là đang chạy. để dùng cho logic start dailybias và scan daily bias
 bool dailyBiasRuning = false;
-// priceFirstEntryDailyBias xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
-double priceFirstEntryDailyBias;
+// initEntryD1 xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
+double initEntryD1;
 // DCA Dương mỗi vol mặc định 0.1
 double dcaPositiveVol = 0.1;
 
 bool h4BiasRuning = false;
-double priceFirstEntryh4Bias;
-double dcaPositiveVolH4 = 0.1;
+double initEntryH4;
+double dcaPositiveVolH4 = 0.08;
 
 bool h1BiasRuning = false;
-double priceFirstEntryh1Bias;
-double dcaPositiveVolH1 = 0.1;
+double initEntryH1;
+double dcaPositiveVolH1 = 0.06;
 
 string HEDGE_COMMENT_PREFIX = "HEDGE";
 int    HEDGE_MAGIC = 20250727;
@@ -120,7 +120,7 @@ int    HEDGE_MAGIC = 20250727;
 #define STATE_ACTIVE_STOP_DCA  "ACTIVE_STOP_DCA"
 
 // dành cho frozen
-#define STATE_OPEN_FROZEN    "OPEN_FROZEN"
+#define STATE_OPEN_FROZEN      "OPEN_FROZEN"
 #define STATE_ACTIVE_FROZEN    "ACTIVE_FROZEN"
 
 // dành chung

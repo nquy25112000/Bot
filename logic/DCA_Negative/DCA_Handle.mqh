@@ -136,14 +136,14 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
   // nếu state là SKIP nghĩa là nó đã quét qua và khớp lệnh đẹp hơn phía dưới rồi -> đủ điều kiện
   // nếu state là CLOSE nghĩa là nó đã đạt đủ target ngày, đạt đủ rồi thì không cần DCA dương gì nữa -> đủ điều kiện
 
-  // check thêm 1 điều kiện nữa là có lệnh DCA dương nào tại điểm priceFirstEntryDailyBias + 1 không để khỏi vô lệnh DCA dương nhiều lần
+  // check thêm 1 điều kiện nữa là có lệnh DCA dương nào tại điểm initEntryD1 + 1 không để khỏi vô lệnh DCA dương nhiều lần
   TicketInfo ticket1 = negativeTicketsByBiasType[1];
   if(ticket1.state != STATE_WAITING_STOP) {
       bool isNotExistsDCAEntry = true;
-      double entryDCAFirstPrice = orderTypeByBiasType == ORDER_TYPE_BUY ? priceFirstEntryDailyBias + 2 : priceFirstEntryDailyBias - 2; // + 2 bởi vì entry DCA đầu tiên cách entry của lệnh đầu ngày 2 giá
+      double entryDCAFirstPrice = orderTypeByBiasType == ORDER_TYPE_BUY ? initEntryD1 + 2 : initEntryD1 - 2; // + 2 bởi vì entry DCA đầu tiên cách entry của lệnh đầu ngày 2 giá
       for(uint i = 0; i < positiveTicketsByBiasType.Size(); i++){
          TicketInfo ticket = positiveTicketsByBiasType[i];
-         // nếu có 1 phần tử tại (priceFirstEntryDailyBias + 2) và state nó khác close nghĩa là đang có lệnh DCA dương ở (priceFirstEntryDailyBias +  2) rồi
+         // nếu có 1 phần tử tại (initEntryD1 + 2) và state nó khác close nghĩa là đang có lệnh DCA dương ở (initEntryD1 +  2) rồi
          if(ticket.price == entryDCAFirstPrice && ticket.state != STATE_CLOSE){
             isNotExistsDCAEntry = false;
             break;
@@ -151,7 +151,7 @@ void scanDCANegative(string biasType) { // tên cũ nó là scanDailyBias
       }
       // không tồn tại entry DCA nào đang active ở điểm start DCA dương (isNotExistsDCAEntry = true) thì mới vào lại lệnh DCA dương
       if(isNotExistsDCAEntry){
-         double entryFirstDCA = orderTypeBias == ORDER_TYPE_BUY ? priceFirstEntryDailyBias + 1 : priceFirstEntryDailyBias - 1;
+         double entryFirstDCA = orderTypeBias == ORDER_TYPE_BUY ? initEntryD1 + 1 : initEntryD1 - 1;
          orderStopFollowTrend(entryFirstDCA); // hàm này cộng sẵn 1 để xử lý cho việc khớp lệnh DCA nữa nên chỉ cần + 1 ở entryFirstDCA;
       }
   }

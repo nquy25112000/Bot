@@ -77,13 +77,13 @@ void GetVolumeNegativeByType(string biasType, double& destination[]) {
 
 void setFirstEntryByBiasType(string biasType, double firstEntry) {
    if (biasType == DAILY_BIAS) {
-      priceFirstEntryDailyBias = firstEntry;
+      initEntryD1 = firstEntry;
    }
    else if (biasType == H4_BIAS) {
-      priceFirstEntryDailyBias = firstEntry; // cần viết lại firstEntry cho H4
+      initEntryD1 = firstEntry; // cần viết lại firstEntry cho H4
    }
    else if (biasType == H1_BIAS) {
-      priceFirstEntryDailyBias = firstEntry; // cần viết lại firstEntry cho H1
+      initEntryD1 = firstEntry; // cần viết lại firstEntry cho H1
    }
 }
 
@@ -109,13 +109,13 @@ ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
 
 double getPriceFirstEntryByBiasType(string biasType) {
    if (biasType == DAILY_BIAS) {
-      return priceFirstEntryDailyBias;
+      return initEntryD1;
    }
    else if (biasType == H4_BIAS) {
-      return priceFirstEntryh4Bias;
+      return initEntryH4;
    }
    else if (biasType == H1_BIAS) {
-      return priceFirstEntryh1Bias;
+      return initEntryH1;
    }
    return 0;
 }
