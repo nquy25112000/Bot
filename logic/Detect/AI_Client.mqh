@@ -1,209 +1,157 @@
 //+------------------------------------------------------------------+
-//| AI_Client.mqh – Build payload, call AI_Support, parse BiasResult |
+//| AI_Client.mqh                                                    |
+//| Gọi trực tiếp OpenAI để nhận kết quả Bias cho BOT               |
 //+------------------------------------------------------------------+
 #ifndef __AI_CLIENT_MQH__
 #define __AI_CLIENT_MQH__
-#property strict
-#include "CandlePattern.mqh"   // dùng AssessCandleD1()
 
-//---------------- AIBiasResult (tránh trùng với BiasResult) --------
-struct AIBiasResult
+#include <Trade\WebRequest.mqh>
+
+//--- Inputs (đặt trong Inputs của EA) --------------------------------
+extern string OpenAI_API_Key;               // API key của bạn
+extern string OpenAI_Model      = "text-davinci-003";
+extern int    OpenAI_MaxTokens  = 128;
+extern double OpenAI_Temperature = 0.0;
+
+//--- Kiểu Timeframe của BiasResult -----------------------------------
+enum BiasTF
 {
-   string  type;            // "BUY" | "SELL" | "NONE"
-   double  percent;         // 0..100
-   double  bullScore;
-   double  bearScore;
-
-   int     patternId;
-   string  patternName;
-   double  patternScore;    // 0..100
-   int     patternCandles;  // 1|2|3|5
-   int     patternShift;    // thường = 1
-   datetime patternTime;    // epoch seconds
-   string  patternStrength; // "STRONG" | "MODERATE" | "NEUTRAL" | "WEAK"
+   BIAS_TF_H1 = 0,
+   BIAS_TF_H4 = 1,
+   BIAS_TF_D1 = 2
 };
 
-// Nếu DetectBIAS.mqh đã được include (có guard này) ⇒ cung cấp hàm map.
-#ifdef __DAILY_BIAS_CONDITIONS_MQH__
-void CopyToBiasResult(const AIBiasResult &src, BiasResult &dst)
+//--- Struct chứa kết quả trả về --------------------------------------
+struct BiasResult
 {
-   dst.type           = src.type;
-   dst.percent        = src.percent;
-   dst.bullScore      = src.bullScore;
-   dst.bearScore      = src.bearScore;
-   dst.patternId      = src.patternId;
-   dst.patternName    = src.patternName;
-   dst.patternScore   = src.patternScore;
-   dst.patternCandles = src.patternCandles;
-   dst.patternShift   = src.patternShift;
-   dst.patternTime    = src.patternTime;
-   dst.patternStrength= src.patternStrength;
-}
-#endif
+   string   symbol;
+   BiasTF   timeframe;
+   string   type;          // "BUY" | "SELL" | "NONE"
+   double   percent;
+   double   bullScore;
+   double   bearScore;
+   int      patternId;
+   string   patternName;
+   double   patternScore;
+   int      patternCandles;
+   int      patternShift;
+   datetime patternTime;
+   string   patternStrength;
+};
 
-//---------------- small helpers (compatible MQL5) ------------------
-string __JsonEscape(const string s){
-   string r = s;
-   StringReplace(r, "\\", "\\\\");
-   StringReplace(r, "\"", "\\\"");
-   return "\""+r+"\"";
-}
-string __TimeToISODate(datetime t){
-   MqlDateTime d; TimeToStruct(t, d);
-   return StringFormat("%04d-%02d-%02d", d.year, d.mon, d.day);
-}
-int __ClampInt(int x,int lo,int hi){ if(x<lo) return lo; if(x>hi) return hi; return x; }
-double __ClampDouble(double x,double lo,double hi){ if(x<lo) return lo; if(x>hi) return hi; return x; }
-
-bool __IsSpace(ushort ch){ return (ch==32 || ch==9 || ch==10 || ch==13); }
-string __Trim(const string &s){
-   int n=StringLen(s);
-   int i=0; while(i<n && __IsSpace(StringGetCharacter(s,i))) i++;
-   int j=n-1; while(j>=i && __IsSpace(StringGetCharacter(s,j))) j--;
-   if(j<i) return "";
-   return StringSubstr(s,i,j-i+1);
-}
-// Tìm cặp dấu " ... " có xét escape
-bool __FindQuoted(const string &src, int from, int &q1, int &q2)
+//--- Helper: escape JSON string --------------------------------------
+string JsonEscape(const string s)
 {
-   q1 = StringFind(src, "\"", from);
-   if(q1<0) return false;
-   int i=q1+1;
-   int len=StringLen(src);
-   while(i<len){
-      ushort ch=StringGetCharacter(src,i);
-      if(ch=='"'){
-         // đếm số backslash liền trước
-         int back=0; int k=i-1;
-         while(k>=q1 && StringGetCharacter(src,k)=='\\'){ back++; k--; }
-         if((back%2)==0){ q2=i; return true; }
-      }
-      i++;
+   string out="";
+   for(int i=0;i<StringLen(s);i++)
+   {
+      uchar c = StringGetCharacter(s,i);
+      if(c==34) out+="\\\\\"";  // dấu "
+      else       out+=StringFormat("%c",c);
    }
-   return false;
+   return out;
 }
 
-//---------------- JSON helpers (đơn giản) --------------------------
-bool __JsonGetString(const string &json,const string &field,string &out){
-   string key="\""+field+"\"";
-   int p=StringFind(json,key); if(p<0) return false;
-   p=StringFind(json,":",p);   if(p<0) return false;
-   int q1,q2;
-   if(!__FindQuoted(json,p+1,q1,q2)) return false;
-   out = StringSubstr(json,q1+1, q2-q1-1);
-   return true;
-}
-bool __JsonGetNumber(const string &json,const string &field,double &out){
-   string key="\""+field+"\"";
-   int p=StringFind(json,key); if(p<0) return false;
-   p=StringFind(json,":",p);   if(p<0) return false;
-
-   int q=p+1;
-   int len=StringLen(json);
-   while(q<len && __IsSpace(StringGetCharacter(json,q))) q++;
-
-   int r=q;
-   while(r<len){
-      ushort ch=StringGetCharacter(json,r);
-      if(ch==',' || ch=='}' || ch==']') break;
-      r++;
+//--- Build JSON prompt từ n cây nến gần nhất ------------------------
+string FormatPrompt(const string symbol, const ENUM_TIMEFRAMES tf, int bars_count)
+{
+   // Lấy dữ liệu nến (bỏ bar hiện tại, từ vị trí 1)
+   MqlRates rates[];
+   int copied = CopyRates(symbol, tf, 1, bars_count, rates);
+   if(copied<=0)
+   {
+      PrintFormat("CopyRates lỗi: %d", GetLastError());
+      return("");
    }
-   string num = __Trim(StringSubstr(json,q,r-q));
-   out = StringToDouble(num);
-   return true;
-}
-bool __JsonGetInt(const string &json,const string &field,int &out){
-   double d; if(!__JsonGetNumber(json,field,d)) return false;
-   out=(int)d; return true;
-}
 
-//---------------- In bias ------------------------------------------
-void PrintAIBiasResult(const AIBiasResult &r)
-{
-   MqlDateTime d; TimeToStruct(r.patternTime, d);
-   PrintFormat("[AI Bias] %04d-%02d-%02d | Bias=%s pct=%.1f | Bull=%.1f Bear=%.1f | Pattern=%s[id=%d,score=%.0f,used=%d,%s] shift=%d",
-               d.year,d.mon,d.day,
-               r.type, r.percent, r.bullScore, r.bearScore,
-               r.patternName, r.patternId, r.patternScore, r.patternCandles, r.patternStrength, r.patternShift);
-}
-
-//---------------- Build payload (D1) --------------------------------
-string BuildPayloadD1(const string symbol, const string timeframe, int lookback, const string session="ASIA")
-{
-   int n = __ClampInt(lookback, 5, 120);
+   // Chuyển thành mảng JSON bars
    string bars="[";
-   for(int i=n; i>=1; --i){
-      datetime t=iTime(symbol, PERIOD_D1, i);
-      double o=iOpen(symbol,PERIOD_D1,i);
-      double h=iHigh(symbol,PERIOD_D1,i);
-      double l=iLow(symbol,PERIOD_D1,i);
-      double c=iClose(symbol,PERIOD_D1,i);
-      if(i!=n) bars += ",";
-      bars += StringFormat("{\"t\":\"%s\",\"o\":%.5f,\"h\":%.5f,\"l\":%.5f,\"c\":%.5f}",
-                           __TimeToISODate(t), o,h,l,c);
+   for(int i=0;i<copied;i++)
+   {
+      if(i>0) bars+=",";
+      bars+=Format(
+         "{\"t\":%d,\"o\":%.5f,\"h\":%.5f,\"l\":%.5f,\"c\":%.5f}",
+         rates[i].time,
+         rates[i].open,
+         rates[i].high,
+         rates[i].low,
+         rates[i].close
+      );
    }
    bars+="]";
 
-   PatternScore ps = AssessCandleD1(1);
-   datetime pt = iTime(symbol, PERIOD_D1, 1);
+   // Chuyển ENUM_TIMEFRAMES sang chữ
+   string tf_str = (tf==PERIOD_D1 ? "D1" :
+                    tf==PERIOD_H4 ? "H4" : "H1");
 
-   string payload =
-      "{"
-        "\"symbol\":" + __JsonEscape(symbol) + ","
-        "\"timeframe\":" + __JsonEscape(timeframe) + ","
-        "\"session\":" + __JsonEscape(session) + ","
-        "\"pattern\":{\"id\":" + IntegerToString(ps.id) + ","
-                     "\"name\":" + __JsonEscape(ps.name) + ","
-                     "\"score\":" + DoubleToString(ps.score,1) + ","
-                     "\"candlesUsed\":" + IntegerToString(ps.candlesUsed) + "},"
-        "\"patternShift\":1,"
-        "\"patternTime\":" + IntegerToString((int)pt) + ","
-        "\"features\":{"
-            "\"rsi\":50.0,\"macd\":{\"m\":0.0,\"s\":0.0},\"adx\":20.0,\"atr\":1.0,"
-            "\"trendExpansionBull\":false,\"trendExpansionBear\":false"
-        "},"
-        "\"bars\":" + bars +
-      "}";
-   return payload;
+   // Tạo prompt tiếng Việt hoặc tiếng Anh tuỳ bạn
+   return Format(
+      "Dựa trên %d cây nến gần nhất của %s khung %s: %s\n"
+      "Hãy phân tích và trả về kết quả Bias dưới dạng JSON đúng cấu trúc của struct BiasResult.",
+      bars_count, symbol, tf_str, bars
+   );
 }
 
-//---------------- Call API ------------------------------------------
-bool CallAISupport(const string &url, const string &payload, string &outJson, int timeoutMs=15000)
+//--- Gửi request và parse kết quả vào BiasResult --------------------
+bool RequestBias(const string symbol, const ENUM_TIMEFRAMES tf, BiasResult &res)
 {
-   string headers = "Content-Type: application/json\r\n";
-   uchar body[];   StringToCharArray(payload, body, 0, WHOLE_ARRAY, CP_UTF8);
-   uchar result[]; string resp_headers;
+   // 1) Build prompt
+   string raw = FormatPrompt(symbol, tf, 20);
+   if(StringLen(raw)==0) return(false);
 
+   // 2) Escape và tạo body JSON
+   string esc = JsonEscape(raw);
+   string body = Format(
+      "{\"model\":\"%s\",\"prompt\":\"%s\",\"max_tokens\":%d,\"temperature\":%.2f}",
+      OpenAI_Model, esc, OpenAI_MaxTokens, OpenAI_Temperature
+   );
+   uchar bytes[];
+   int   len = StringToCharArray(body, bytes, 0, CP_UTF8);
+
+   // 3) Tiêu đề HTTP
+   string headers =
+      "Content-Type: application/json\r\n"
+      "Authorization: Bearer " + OpenAI_API_Key;
+
+   // 4) Gọi WebRequest
    ResetLastError();
-   int code = WebRequest("POST", url, headers, timeoutMs, body, result, resp_headers);
-   requestCount++;
-   if(code!=200){
-      PrintFormat("[AI] WebRequest fail: HTTP=%d, err=%d. Whitelist %s ?", code, GetLastError(), url);
-      return false;
+   char resp[];
+   int  code = WebRequest(
+      "POST",
+      "https://api.openai.com/v1/completions",
+      headers,
+      30000,
+      bytes, len,
+      resp, NULL
+   );
+   if(code!=200)
+   {
+      PrintFormat("OpenAI API lỗi HTTP %d (Err=%d)", code, GetLastError());
+      return(false);
    }
-   outJson = CharArrayToString(result, 0, -1, CP_UTF8);
-   return true;
+
+   // 5) Chuyển về string và trích JSON phần AI trả về
+   string reply = CharArrayToString(resp);
+   int    p     = StringFind(reply, "{");
+   if(p<0)
+   {
+      Print("Không tìm thấy JSON trong reply");
+      return(false);
+   }
+   string json = StringSubstr(reply, p);
+
+   // 6) Parse JSON thành struct (bạn tự implement)
+   if(!ParseBiasResultFromJson(json, res))
+   {
+      Print("ParseBiasResultFromJson thất bại");
+      return(false);
+   }
+
+   // 7) Gán lại trường timeframe trong struct
+   res.timeframe = (tf==PERIOD_D1?BIAS_TF_D1:
+                   (tf==PERIOD_H4?BIAS_TF_H4:BIAS_TF_H1));
+
+   return(true);
 }
 
-//---------------- Parse JSON -> AIBiasResult ------------------------
-bool ParseAIBiasResult(const string &json, AIBiasResult &r)
-{
-   r.type="NONE"; r.percent=0; r.bullScore=0; r.bearScore=0;
-   r.patternId=0; r.patternName="None"; r.patternScore=0; r.patternCandles=1; r.patternShift=1; r.patternTime=0; r.patternStrength="NEUTRAL";
-
-   string s; double d; int v;
-   if(__JsonGetString(json,"type",s)) r.type=s;
-   if(__JsonGetNumber(json,"percent",d)) r.percent=__ClampDouble(d,0,100);
-   if(__JsonGetNumber(json,"bullScore",d)) r.bullScore=d;
-   if(__JsonGetNumber(json,"bearScore",d)) r.bearScore=d;
-
-   if(__JsonGetInt(json,"patternId",v)) r.patternId=v;
-   if(__JsonGetString(json,"patternName",s)) r.patternName=s;
-   if(__JsonGetNumber(json,"patternScore",d)) r.patternScore=d;
-   if(__JsonGetInt(json,"patternCandles",v)) r.patternCandles=__ClampInt(v,1,5);
-   if(__JsonGetInt(json,"patternShift",v)) r.patternShift=v;
-   if(__JsonGetInt(json,"patternTime",v)) r.patternTime=(datetime)v;
-   if(__JsonGetString(json,"patternStrength",s)) r.patternStrength=s;
-   return true;
-}
 #endif // __AI_CLIENT_MQH__

@@ -1,236 +1,123 @@
 #!/usr/bin/env bash
-# Script: generate_hedge_tunnel_files.sh
-# Mục đích: Tạo Helper.mqh và HedgeTunnel_Martingale_EA.mqh từ template
+# ------------------------------------------------------------
+# script.sh – khởi tạo & cài BiasService trong Bot/logic/Detect
+# ------------------------------------------------------------
+set -euo pipefail
 
-set -e
+SERVICE_NAME="BiasService"        # đổi nếu muốn
+PY=python3                         # hoặc python
 
-# Thư mục đầu ra (tùy chỉnh nếu cần)
-OUT_DIR="./"
-echo "Generating files in ${OUT_DIR}"
+# Thư mục hiện tại (chính là Bot)
+BOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DETECT_DIR="$BOT_DIR/logic/Detect"
+SERVICE_DIR="$DETECT_DIR/$SERVICE_NAME"
 
-# 1) Tạo Helper.mqh
-cat > "${OUT_DIR}Helper.mqh" << 'EOF'
-//+------------------------------------------------------------------+
-//| File: Helper.mqh                                                |
-//| Mục đích: Gom các hàm tiện ích chung để include ở EA chính       |
-//+------------------------------------------------------------------+
-#property strict
+echo "BOT_DIR     : $BOT_DIR"
+echo "SERVICE_DIR : $SERVICE_DIR"
+echo "------------------------------------------------------------"
 
-//======== Lot & Price Utils ========
-double SymbolMinLot()  { double v; SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN, v);  return v; }
-double SymbolLotStep() { double v; SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP, v); return v; }
-double SymbolMaxLot()  { double v; SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX, v);  return v; }
+# --- Tạo thư mục ---
+if [[ -d "$SERVICE_DIR" ]]; then
+  echo "❌ '$SERVICE_DIR' đã tồn tại, dừng."
+  exit 1
+fi
+mkdir -p "$SERVICE_DIR"
+cd "$SERVICE_DIR"
 
-double ClampLot(double x)
-{
-  double minL = SymbolMinLot(), step = SymbolLotStep(), maxL = SymbolMaxLot();
-  x = MathMax(minL, MathMin(x, maxL));
-  int n = (int)MathRound(x/step);
-  return NormalizeDouble(n*step, 2);
-}
+# --- requirements.txt ---
+cat > requirements.txt <<'REQ'
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+openai>=1.21
+REQ
 
-double Nd(double p)
-{
-  return NormalizeDouble(p, (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS));
-}
+# --- .env.example & .env ---
+cat > .env.example <<'ENV'
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+TEMPERATURE=0.0
+ENV
+cp .env.example .env
 
-double TotalFloatingProfit()
-{
-  double tot = 0.0;
-  for(int i = 0, c = PositionsTotal(); i < c; i++)
-  {
-    ulong tk = PositionGetTicket(i);
-    if(tk == 0 || !PositionSelectByTicket(tk)) continue;
-    if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
-    tot += PositionGetDouble(POSITION_PROFIT);
-  }
-  return tot;
-}
+# --- models.py ---
+cat > models.py <<'PY'
+from datetime import datetime
+from typing import List, Literal
+from pydantic import BaseModel, Field
 
-//======== State Scan & Net ========
-bool StateInList(const string &s, string st[], int n)
-{
-  for(int i = 0; i < n; i++)
-    if(s == st[i]) return true;
-  return false;
-}
+class Bar(BaseModel):
+    t: int
+    o: float; h: float; l: float; c: float
 
-void ScanArray(TicketInfo &arr[], string st[], int n,
-               int &cnt, double &sb, double &pb, double &ss, double &ps,
-               ulong &lt, double &lp, double &lv, bool &isBuy)
-{
-  for(int i = 0, N = ArraySize(arr); i < N; i++)
-  {
-    if(!StateInList(arr[i].state, st, n)) continue;
-    cnt++;
-    double v = arr[i].volume, p = arr[i].price;
-    if(v > 0) { sb += v; pb += v*p; }
-    else      { ss += -v; ps += -v*p; }
-    if(arr[i].ticketId > lt)
-    {
-      lt = arr[i].ticketId;
-      lp = p; lv = v; isBuy = (v >= 0);
-    }
-  }
-}
+class AnalyzeRequest(BaseModel):
+    symbol: str
+    timeframe: Literal["H1", "H4", "D1"]
+    bars: List[Bar] = Field(..., min_items=5, max_items=100)
 
-bool ComputeNetAndLatest(string st[], int n,
-                         double &netAvg, double &netVol,
-                         double &bVol, double &sVol,
-                         double &aBP, double &aSP,
-                         bool &hasLatest, string &side,
-                         double &price, double &vol)
-{
-  int cnt = 0;
-  double sb = 0, pb = 0, ss = 0, ps = 0;
-  ulong lt = 0; double lp = 0, lv = 0; bool isB = false;
+class BiasResult(BaseModel):
+    symbol: str
+    timeframe: Literal["H1", "H4", "D1"]
+    type: Literal["BUY", "SELL", "NONE"]
+    percent: float
+    bullScore: float
+    bearScore: float
+    patternId: int
+    patternName: str
+    patternScore: float
+    patternCandles: int
+    patternShift: int
+    patternTime: datetime
+    patternStrength: str
+PY
 
-  ScanArray(negTicketList,         st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(posTicketList, st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
-  ScanArray(frozTicketList,   st, n, cnt, sb, pb, ss, ps, lt, lp, lv, isB);
+# --- app.py ---
+cat > app.py <<'PY'
+import os, json, openai
+from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
+from models import AnalyzeRequest, BiasResult
 
-  if(cnt == 0) return false;
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+MODEL          = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+TEMP           = float(os.getenv("TEMPERATURE", 0))
 
-  bVol = sb; sVol = ss;
-  aBP  = (sb > 0 ? pb/sb : 0);
-  aSP  = (ss > 0 ? ps/ss : 0);
+SYSTEM = ("Bạn là chuyên gia phân tích kỹ thuật 15 năm kinh nghiệm. "
+          "Nhận dữ liệu nến và trả về JSON đúng schema BiasResult.")
 
-  double net = bVol - sVol;
-  if(MathAbs(net) >= 1e-9) { netAvg = (pb - ps)/net; netVol = MathAbs(net); }
+app = FastAPI(title="BiasService")
 
-  hasLatest = (lt > 0);
-  side      = (isB ? "BUY" : "SELL");
-  price     = lp;
-  vol       = MathAbs(lv);
+def ask_ai(prompt:str)->dict:
+    rsp=openai.chat.completions.create(
+        model=MODEL,temperature=TEMP,
+        messages=[{"role":"system","content":SYSTEM},
+                  {"role":"user","content":prompt}]
+    )
+    return json.loads(rsp.choices[0].message.content.strip())
 
-  return MathAbs(net) >= 1e-9;
-}
+@app.post("/analyze", response_model=BiasResult)
+def analyze(req:AnalyzeRequest):
+    bars=json.dumps([b.model_dump() for b in req.bars], ensure_ascii=False)
+    prompt=(f"Symbol:{req.symbol}\nTimeframe:{req.timeframe}\nBars:{bars}\n"
+            "Hãy trả về BiasResult JSON.")
+    try:
+        return BiasResult(**ask_ai(prompt))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+PY
 
-//======== Broker Stops Guard ========
-long   StopsLevelPoints() { long lvl = 0; SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL, lvl); return lvl; }
-double MinStopsPrice()    { return StopsLevelPoints() * SymbolInfoDouble(_Symbol, SYMBOL_POINT); }
+# --- README.md ngắn ---
+echo "# BiasService – FastAPI + OpenAI" > README.md
 
-void MakeValidPending(string side, double &e, double &sl, double &tp)
-{
-  double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT), md = MinStopsPrice();
-  double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK), bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+# --- virtual-env & install ---
+echo "🔧 Tạo venv và cài package..."
+$PY -m venv .venv
+source .venv/bin/activate
+pip install -q --upgrade pip
+pip install -q -r requirements.txt
 
-  if(side == "BUY")
-  {
-    if(e <= ask + md)   e  = ask + md + 2*pt;
-    if(tp <= e + md)    tp = e + md + 2*pt;
-    if(sl > 0 && sl >= e - md) sl = e - md - 2*pt;
-  }
-  else
-  {
-    if(e >= bid - md)   e  = bid - md - 2*pt;
-    if(tp >= e - md)    tp = e - md - 2*pt;
-    if(sl > 0 && sl <= e + md) sl = e + md + 2*pt;
-  }
-
-  e  = Nd(e);
-  if(sl > 0) sl = Nd(sl);
-  tp = Nd(tp);
-}
-
-void LogPlan(int r, string s, double v, double e, double sl, double tp)
-{
-  PrintFormat("[HEDGE_MART][R%d] %s_STOP vol=%.2f entry=%.2f sl=%.2f tp=%.2f", r, s, v, e, sl, tp);
-}
-
-bool PlaceStop(string side, double vol, double e, double sl, double tp, int r)
-{
-  vol = ClampLot(vol);
-  MakeValidPending(side, e, sl, tp);
-  trade.SetExpertMagicNumber(HEDGE_MAGIC);
-  trade.SetDeviationInPoints(10);
-
-  string c = StringFormat("%s|%s|R%d", HEDGE_COMMENT_PREFIX, side, r);
-  bool ok = (side == "BUY"
-             ? trade.BuyStop(vol, e, _Symbol, sl, tp, ORDER_TIME_GTC)
-             : trade.SellStop(vol, e, _Symbol, sl, tp, ORDER_TIME_GTC));
-  if(!ok) PrintFormat("[HEDGE_MART][ERR] %s_STOP Err=%d", side, GetLastError());
-  return ok;
-}
-EOF
-
-# 2) Tạo HedgeTunnel_Martingale_EA.mqh
-cat > "${OUT_DIR}HedgeTunnel_Martingale_EA.mqh" << 'EOF'
-//+------------------------------------------------------------------+
-//| File: HedgeTunnel_Martingale_EA.mqh                             |
-//| Mục đích: EA chính include Helper.mqh và gọi martingale core     |
-//+------------------------------------------------------------------+
-#property strict
-#include <Trade/Trade.mqh>
-#include "Helper.mqh"
-
-extern string   HEDGE_COMMENT_PREFIX = "HEDGE";
-extern int      HEDGE_MAGIC          = 20250727;
-extern TicketInfo negTicketList[];
-extern TicketInfo posTicketList[];
-extern TicketInfo frozTicketList[];
-
-void Hedging_for_state_martingale(string st[], int n, int maxr, double tpft,
-                                  double D_TP, double D_TUNNEL, double mult)
-{
-  // 1) Tính net & latest
-  double netAvg=0, netVol=0, bVol=0, sVol=0, abp=0, asp=0;
-  bool hasLatest=false; string side=""; double lp=0, lv=0;
-  bool haveNet = ComputeNetAndLatest(st,n,
-                                     netAvg, netVol,
-                                     bVol, sVol,
-                                     abp, asp,
-                                     hasLatest, side, lp, lv);
-  if(!hasLatest) return;
-
-  // 2) Xác định Tunnel & baseVol
-  double Upper, Lower, baseVol;
-  if(haveNet)
-  {
-    Upper   = Nd(netAvg + D_TUNNEL);
-    Lower   = Nd(netAvg - D_TUNNEL);
-    baseVol = netVol;
-  }
-  else
-  {
-    if(side == "SELL")
-    {
-      Lower = Nd(lp);
-      Upper = Nd(Lower + 2*D_TUNNEL);
-    }
-    else
-    {
-      Upper = Nd(lp);
-      Lower = Nd(Upper - 2*D_TUNNEL);
-    }
-    baseVol = (lv > 0 ? lv : SymbolMinLot());
-  }
-
-  // 3) Entry/SL/TP cố định
-  double be = Upper,  bs = Lower, bt = Nd(Upper + D_TP);
-  double se = Lower,  ss = Upper, stp= Nd(Lower - D_TP);
-
-  // 4) Vòng Martingale
-  for(int r=1; r<=maxr; r++)
-  {
-    if(TotalFloatingProfit() >= tpft) break;
-    double vol = ClampLot(baseVol * MathPow(mult, r-1));
-
-    LogPlan(r, "BUY",  vol, be,  bs,  bt);
-    PlaceStop("BUY",  vol, be,  bs,  bt,  r);
-    LogPlan(r, "SELL", vol, se,  ss,  stp);
-    PlaceStop("SELL", vol, se,  ss,  stp,  r);
-  }
-}
-
-void OnTick()
-{
-  string states[] = {"OPEN","POS","FROZEN"};
-  int    nStates  = ArraySize(states);
-  int    ratio[]  = {2,5,2}; // D_TP=2, D_TUNNEL=5, multiplier=2
-  Hedging_for_state_martingale(states, nStates, 4, 100.0,
-                               ratio[0], ratio[1], ratio[2]);
-}
-EOF
-
-echo "Helper.mqh and HedgeTunnel_Martingale_EA.mqh have been created."
+echo "✅ Hoàn tất! Service nằm tại: $SERVICE_DIR"
+echo "👉 Điền OPENAI_API_KEY trong $SERVICE_DIR/.env rồi chạy:"
+echo "   source $SERVICE_DIR/.venv/bin/activate && uvicorn app:app --port 8000"
