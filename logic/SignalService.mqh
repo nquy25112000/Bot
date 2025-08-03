@@ -10,6 +10,7 @@ void startBias(string biasType) {
   biasTYPE = biasType;
   dcaPositiveVol = biasType == DAILY_BIAS ? 0.1 : (biasType == H4_BIAS ? 0.08 : 0.06);
   ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType); // BUY hoặc SELL
+  printf("TYPE BIAS: %s, orderTypeByBiasType: %d", biasTYPE, orderTypeByBiasType);
   if (orderTypeByBiasType == NULL) {
     return;
   }

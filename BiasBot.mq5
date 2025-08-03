@@ -56,6 +56,8 @@ void OnTimer() {
     dailyBiasStartTime = now;
   }
 
+  // [D1 7H> NONE > H4(7H) > NONE > H1(7H,8H,9H,10) > H4(11H) > NONE > H1(11H,12H,13H,14H)]  TOI 14H K CO SIGNAL NGHI LUON
+
   // double pnl = AccountInfoDouble(ACCOUNT_EQUITY) - AccountInfoDouble(ACCOUNT_BALANCE);
   // if (pnl < -950.0)
   // {
