@@ -8,8 +8,7 @@
 // tiếp tục nếu gá chạm 3307 thi đặt 1 lệnh BUY STOP ở 3308 đồng thời dời SL của 3305 và 3306 lên 3306.5
 void handleDCAPositive(ulong ticketId) {
 
-  string biasType = getBiasTypeByTicketId(ticketId);
-  ENUM_ORDER_TYPE orderType = getBiasOrderType(biasType);
+  ENUM_ORDER_TYPE orderType = getBiasOrderType( biasTYPE);
   TicketInfo positiveTicketsByBiasType[];
   getBiasArray(POSITIVE_ARRAY, positiveTicketsByBiasType);
 
@@ -30,7 +29,7 @@ void handleDCAPositive(ulong ticketId) {
   if (entryToNextAction == 0) return;
   // gọi isOnlyFirst trước khi gọi orderStopFollowTrend bởi vì orderStopFollowTrend sẽ thêm 1 phần tử vào mảng
   bool isOnlyFirst = positiveTicketsByBiasType.Size() == 1;
-  orderStopFollowTrend(biasType, entryToNextAction);
+  orderStopFollowTrend(entryToNextAction);
   // nếu vô hàm này mà mảng chỉ có 1 phần tử thì có nghĩa là khớp lệnh lần đầu tiên nên return chứ k có step dời SL
   if (isOnlyFirst) {
     return;

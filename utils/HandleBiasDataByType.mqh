@@ -4,7 +4,7 @@
 
 // lấy mảng theo loại âm dương hoặc frozen theo loại
 
-void getBiasArray(string arrayType,TicketInfo& result[]) {
+void getBiasArray(string arrayType, TicketInfo& result[]) {
 
    if (arrayType == POSITIVE_ARRAY)
       copyTicketArray(posTicketList, result);
@@ -103,8 +103,21 @@ ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
       return ORDER_TYPE_BUY;
    }
    else {
-      return "NONE";
+      if (biasTYPE == DAILY_BIAS)
+      {
+         startBias(H4_BIAS);
+      }
+      else if (biasTYPE == H4_BIAS)
+      {
+         startBias(H1_BIAS);
+      }
+      else
+      {
+         return NULL;
+      }
+
    }
+    return NULL;
 }
 
 
@@ -121,23 +134,4 @@ double getPriceFirstEntryByBiasType(string biasType) {
    return 0;
 }
 
-string getBiasTypeByTicketId(ulong ticketId) {
-   for (uint i = 0; i < D1_ticketIds.Size(); i++) {
-      if (ticketId == D1_ticketIds[i]) {
-         return DAILY_BIAS;
-      }
-   }
-   for (uint i = 0; i < H4_ticketIds.Size(); i++) {
-      if (ticketId == H4_ticketIds[i]) {
-         return H4_BIAS;
-      }
-   }
-   for (uint i = 0; i < H1_ticketIds.Size(); i++) {
-      if (ticketId == H1_ticketIds[i]) {
-         return H1_BIAS;
-      }
-   }
-   return NULL;
-}
-
-#endif __BIAS_DATA_BY_TYPE_MQH__
+#endif // __BIAS_DATA_BY_TYPE_MQH__

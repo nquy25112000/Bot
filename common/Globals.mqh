@@ -9,9 +9,9 @@ struct TicketInfo
    double            price;
    double            activePrice;
    ulong             frozenByTicketId;
-   string            timeFrame;
 };
 
+string biasTYPE = "D1";
 // ---------- ENUM / STRUCT ---------------------------------------
 enum BiasTF { BIAS_TF_H1 = 0, BIAS_TF_H4 = 1, BIAS_TF_D1 = 2 };
 

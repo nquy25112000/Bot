@@ -6,9 +6,9 @@
 // Tạo lệnh đầu tiên và thiết lập các lệnh chờ (trạng thái WAITING_STOP)
 //-------------------------------------------------------------
 void startBias(string biasType) {
-
+  biasTYPE = biasType;
   dailyBiasRuning = true;
-  ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType);
+  ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType); // BUY hoặc SELL
   double currentPrice = getCurrentPrice(orderTypeByBiasType);
   // clear toàn bộ data cũ
   clearDataByType(biasType);
