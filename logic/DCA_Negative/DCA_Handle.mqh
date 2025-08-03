@@ -32,7 +32,9 @@ void initDCANegative(string biasType) {
       negativeVolumes[0],
       STATE_OPEN,
       priceFirstEntry,
-      0
+      0,
+      -1, // frozenByTicketId không cần thiết trong trường hợp này
+      biasType
     };
 
     ticketInfos[0] = firstTicket;

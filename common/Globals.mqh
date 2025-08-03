@@ -9,6 +9,7 @@ struct TicketInfo
    double            price;
    double            activePrice;
    ulong             frozenByTicketId;
+   string            timeFrame;
 };
 
 // ---------- ENUM / STRUCT ---------------------------------------
