@@ -65,14 +65,6 @@ TicketInfo posTicketList[];
 // frozTicketList là danh sách các lệnh đóng băng cho lệnh DCA dương
 TicketInfo frozTicketList[];
 
-TicketInfo h4BiasNegative[];
-TicketInfo h4BiasPositive[];
-TicketInfo h4BiasFrozen[];
-
-TicketInfo h1BiasNegative[];
-TicketInfo h1BiasPositive[];
-TicketInfo h1BiasFrozen[];
-
 ulong dailyBiasTicketIds[];
 ulong h4BiasTicketIds[];
 ulong h1BiasTicketIds[];
