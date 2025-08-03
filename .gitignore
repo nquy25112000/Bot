@@ -1,0 +1,53 @@
+# === Secrets / env configs ===
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+# examples (keep .env.example in repo, don't ignore it)
+!.env.example
+
+# Private keys / certs
+*.key
+*.pem
+*.p12
+secret.*
+credentials.*
+
+# === MetaTrader / MQL ===
+# compiled outputs
+*.ex5
+*.ex4
+# dependency/temp if any
+*.mqh.dep
+
+# === Logs / runtime artifacts ===
+*.log
+*.tmp
+*.cache
+*.bak
+*.out
+
+# === Editors / IDEs ===
+.vscode/
+*.code-workspace
+.idea/
+*.iml
+
+# Vim / swap
+*~
+*.swp
+*.swo
+
+# === OS metadata ===
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Misc / generated ===
+# fallback catch-all
+~$*
+*.orig

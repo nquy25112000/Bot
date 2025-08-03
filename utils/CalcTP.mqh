@@ -1,8 +1,6 @@
 #ifndef __CALCTP_MQH__
 #define __CALCTP_MQH__
 
-#include "../common/Globals.mqh"
-
 //-------------------------------------------------------------
 // Tính toán Take Profit dựa vào:
 // - Giá trung bình các lệnh
@@ -16,16 +14,19 @@ double CalcTP(double avgPrice, double totalVol, int entryIndex)
   if (totalVol <= 0.0)
     return EMPTY_VALUE;      // tránh chia 0
 
-  double targetCent;
-  if (entryIndex < targetByIndex1)
-    targetCent = 630;
-  else if (entryIndex < targetByIndex2)
-    targetCent = 720;
-  else
-    targetCent = 900;
+  double targetCent = getTargetCentDailyBias(entryIndex);
 
   double deltaP = targetCent / (totalVol * 100.0);
-  return (avgPrice + deltaP);
+  return (avgPrice + (orderTypeBias == ORDER_TYPE_BUY ? deltaP : - deltaP));
+}
+
+double getTargetCentDailyBias(int entryIndex){
+  if (entryIndex < targetByIndex1)
+    return 630;
+  else if (entryIndex < targetByIndex2)
+    return 720;
+  else
+    return 900;
 }
 
 #endif // __CALCTP_MQH__

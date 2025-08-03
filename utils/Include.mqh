@@ -1,0 +1,42 @@
+#ifndef __INCLUDE_MQH__
+#define __INCLUDE_MQH__
+
+// library
+#include <Trade\Trade.mqh>
+#include <Arrays\ArrayObj.mqh>
+CTrade trade;
+
+// common
+#include "../common/Globals.mqh"
+
+//logic
+#include "../logic/Detect/ScanBIAS.mqh"
+#include "../logic/Detect/LogicBIAS.mqh"
+#include "../logic/Detect/CandlePattern.mqh"
+#include "../logic/Detect/AI_Detect.mqh"
+
+#include "../logic/SignalService.mqh"
+#include "../logic/TicketService.mqh"
+#include "../logic/TradeService.mqh"
+#include "..\\logic\\Hedging\\Helper_Hybrid.mqh"
+#include "..\\logic\\Hedging\\Hedging_Hybrid_Dynamic.mqh"
+
+// logic/DCA_Negative
+#include "../logic/DCA_Negative/DCA_Handle.mqh"
+#include "../logic/DCA_Negative/DCA_Update.mqh"
+
+// logic/DCA_Positive
+#include "../logic/DCA_Positive/DCA_Handle.mqh"
+#include "../logic/DCA_Positive/DCA_Update.mqh"
+#include "../logic/DCA_Positive/DCA_Util.mqh"
+
+// logic/Frozen
+#include "../logic/Frozen/Frozen_Handle.mqh"
+
+// utils
+#include "./GetTotalProfitFrom.mqh"
+#include "./CalcTP.mqh"
+#include "./HandleBiasDataByType.mqh"
+
+
+#endif // __INCLUDE_MQH__
