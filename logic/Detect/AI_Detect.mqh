@@ -99,7 +99,7 @@ bool RequestBias(const string sym,const ENUM_TIMEFRAMES tf,BiasResult &out)
                        BiasService_TimeoutMs,
                        data, resp, hdr);
 
-   if(code!=200){ Print("BiasService HTTP ",code," err=",GetLastError()); return false; }
+   if(code!=200){ Print("BiasService HTTP >>>",code," err=",GetLastError()); return false; }
 
    string json=CharArrayToString(resp);
    if(!ParseBiasResultFromJson(json,out)){ Print("ParseBiasResultFromJson fail"); return false; }
