@@ -52,7 +52,7 @@ void OnTimer() {
   }
 
   if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !isRunningBIAS) {
-    startBias(DAILY_BIAS);
+    startBias();
     dailyBiasStartTime = now;
   }
 
@@ -69,7 +69,12 @@ void OnTimer() {
   // }
 
   if (isRunningBIAS) {
-    scanDCANegative(DAILY_BIAS);
+    scanDCANegative();
+    double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
+    if(totalProfitFromTime >= 900){
+      CloseAllOrdersAndPositions();
+      isRunningBIAS = false;
+    }
   }
 
 }

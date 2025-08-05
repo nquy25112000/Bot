@@ -2,56 +2,15 @@
 #define __BIAS_DATA_BY_TYPE_MQH__
 
 
-// lấy mảng theo loại âm dương hoặc frozen theo loại
-
-void getBiasArray(string arrayType, TicketInfo& result[]) {
-
-   if (arrayType == POSITIVE_ARRAY)
-      copyTicketArray(posTicketList, result);
-   else if (arrayType == NEGATIVE_ARRAY)
-      copyTicketArray(negTicketList, result);
-   else if (arrayType == FROZEN_ARRAY)
-      copyTicketArray(frozTicketList, result);
-   else
-      ArrayFree(result);
-}
-
-
-void updateBiasArray(string arrayType, TicketInfo& result[]) {
-   if (arrayType == POSITIVE_ARRAY)
-      copyTicketArray(result, posTicketList);
-   else if (arrayType == NEGATIVE_ARRAY)
-      copyTicketArray(result, negTicketList);
-   else if (arrayType == FROZEN_ARRAY)
-      copyTicketArray(result, frozTicketList);
-}
-
-void copyTicketArray(TicketInfo& source[], TicketInfo& destination[]) {
-   int size = ArraySize(source);
-   ArrayResize(destination, size);
-   for (int i = 0; i < size; i++) {
-      destination[i] = source[i];
-   }
-}
-
-void updateDailyBiasArray(string arrayType, TicketInfo& result[]) {
-   if (arrayType == POSITIVE_ARRAY)
-      copyTicketArray(posTicketList, result);
-   else if (arrayType == NEGATIVE_ARRAY)
-      copyTicketArray(negTicketList, result);
-   else if (arrayType == FROZEN_ARRAY)
-      copyTicketArray(frozTicketList, result);
-}
-
-
-void clearDataByType() {
+void clearData() {
    ArrayFree(negTicketList);
    ArrayFree(posTicketList);
    ArrayFree(frozTicketList);
+   negativeTicketIndex = 0;
 }
 
 // lấy danh sách volume negative theo type
-void GetVolumeNegativeByType(string biasType, double& destination[]) {
+void GetVolumeNegativeByType(double& destination[]) {
    if (biasType == DAILY_BIAS) {
       ArrayCopy(destination, negD1volumes);
    }
@@ -63,42 +22,65 @@ void GetVolumeNegativeByType(string biasType, double& destination[]) {
    }
 }
 
-
-
-
-ENUM_ORDER_TYPE getBiasOrderType(string biasType) {
+ENUM_ORDER_TYPE getBiasOrderType(BiasTF timeFrameRequest) {
 
    BiasConfig cfg;
    cfg.symbol = _Symbol;
-   cfg.timeframe = biasType == DAILY_BIAS ? BIAS_TF_D1 : (biasType == H4_BIAS ? BIAS_TF_H4 : BIAS_TF_H1);
+   cfg.timeframe = timeFrameRequest;
    BiasResult biasResult;
    biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL") {
+      setDataByTimeFrame(timeFrameRequest);
       isRunningBIAS = true;
       return ORDER_TYPE_SELL;
    }
    else if (biasResult.type == "BUY") {
+      setDataByTimeFrame(timeFrameRequest);
       isRunningBIAS = true;
       return ORDER_TYPE_BUY;
    }
    else {
-      if (biasTYPE == DAILY_BIAS)
+      if (timeFrameRequest == BIAS_TF_D1)
       {
-         startBias(H4_BIAS);
+         getBiasOrderType(BIAS_TF_H4);
       }
-      else if (biasTYPE == H4_BIAS)
+      else if (timeFrameRequest == BIAS_TF_H4)
       {
-         startBias(H1_BIAS);
+         getBiasOrderType(BIAS_TF_H1);
       }
-      else
-      {
-         return NULL;
-      }
-
    }
    return NULL;
 }
 
+void setDataByTimeFrame(BiasTF timeFrameRequest){
+   isRunningBIAS = true;
+   if(timeFrameRequest == BIAS_TF_D1){
+      dcaPositiveVol = 0.1;
+      biasType = DAILY_BIAS;
+   } else if(timeFrameRequest == BIAS_TF_H4){
+      dcaPositiveVol = 0.08;
+      biasType = H4_BIAS;
+   } else if(timeFrameRequest == BIAS_TF_H1){
+      dcaPositiveVol = 0.06;
+      biasType = H1_BIAS;
+   }
+}
+
+
+// Hàm để test như cũ
+ENUM_ORDER_TYPE getOrder(){
+   BiasConfig cfg;
+   cfg.symbol = _Symbol;
+   cfg.timeframe = BIAS_TF_D1;
+   BiasResult biasResult;
+   biasResult = DetectBias(cfg);
+   if (biasResult.type == "SELL") {
+      setDataByTimeFrame(BIAS_TF_D1);
+      return ORDER_TYPE_SELL;
+   }
+   setDataByTimeFrame(BIAS_TF_D1);
+   return ORDER_TYPE_BUY;
+ }
 
 
 #endif // __BIAS_DATA_BY_TYPE_MQH__

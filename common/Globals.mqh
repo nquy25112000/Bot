@@ -11,7 +11,7 @@ struct TicketInfo
    ulong             frozenByTicketId;
 };
 
-string biasTYPE = "D1";
+string biasType = "D1";
 // ---------- ENUM / STRUCT ---------------------------------------
 enum BiasTF { BIAS_TF_H1 = 0, BIAS_TF_H4 = 1, BIAS_TF_D1 = 2 };
 
@@ -75,16 +75,14 @@ int totalBuy = 0;
 int totalNone = 0;
 int lastLoggedDay = -1;
 
-// orderTypeBias biến khởi tạo đẻ xác định hôm nay đánh bài nào
+// orderTypeBias biến khởi tạo đẻ xác định bias đánh bài nào
 ENUM_ORDER_TYPE orderTypeBias;
-ENUM_ORDER_TYPE orderTypeH4Bias;
-ENUM_ORDER_TYPE orderTypeH1Bias;
 
 // isRunningBIAS xác định nó có trạng thái nào. 0 là không chạy, 1 là đang chạy. để dùng cho logic start dailybias và scan daily bias
 bool isRunningBIAS = false;
 // priceInitEntry xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
 double priceInitEntry;
-
+// biến xác định vol cho DCA dương
 double dcaPositiveVol;
 
 
