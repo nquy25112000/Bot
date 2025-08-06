@@ -118,12 +118,14 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
   // nếu state là CLOSE nghĩa là nó đã đạt đủ target ngày, đạt đủ rồi thì không cần DCA dương gì nữa -> đủ điều kiện
 
   // check thêm 1 điều kiện nữa là có lệnh DCA dương nào tại điểm priceInitEntry + 1 không để khỏi vô lệnh DCA dương nhiều lần
-  TicketInfo ticket1 = negTicketList[1];
+  TicketInfo ticket1;
+  ticket1 = negTicketList[1];
   if(ticket1.state != STATE_WAITING_STOP) {
       bool isNotExistsDCAEntry = true;
       double entryDCAFirstPrice = orderTypeBias == ORDER_TYPE_BUY ? priceInitEntry + 2 : priceInitEntry - 2; // + 2 bởi vì entry DCA đầu tiên cách entry của lệnh đầu ngày 2 giá
       for(uint i = 0; i < posTicketList.Size(); i++){
-         TicketInfo ticket = posTicketList[i];
+         TicketInfo ticket; 
+         ticket = posTicketList[i];
          // nếu có 1 phần tử tại (priceInitEntry + 2) và state nó khác close nghĩa là đang có lệnh DCA dương ở (priceInitEntry +  2) rồi
          if(ticket.price == entryDCAFirstPrice && ticket.state != STATE_CLOSE){
             isNotExistsDCAEntry = false;

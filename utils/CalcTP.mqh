@@ -22,11 +22,11 @@ double CalcTP(double avgPrice, double totalVol, int entryIndex)
 
 double getTargetCentDailyBias(int entryIndex){
   if (entryIndex < targetByIndex1)
-    return 630;
+    return targetCentList[0];
   else if (entryIndex < targetByIndex2)
-    return 720;
+    return targetCentList[1];
   else
-    return 900;
+    return targetCentList[2];
 }
 
 #endif // __CALCTP_MQH__
