@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+apscheduler
+openai
+python-dotenv
+pytz ; python_version < "3.9"

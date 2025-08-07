@@ -44,6 +44,12 @@ struct BiasResult
    string patternStrength;
 };
 
+BiasResult rsAI_D1bias;
+BiasResult rsAI_H4bias;
+BiasResult rsAI_H1bias;
+
+datetime g_stopTime;   // mốc 15:00 (UTC+7)
+
 // thời gian start daily bias. dùng để xác định thời gian bắt đầu của 1 lần chạy daily để tính toán lợi nhuận từ thời điểm start đến hiện tại
 datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
