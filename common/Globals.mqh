@@ -11,7 +11,7 @@ struct TicketInfo
    ulong             frozenByTicketId;
 };
 
-string biasTYPE = "D1";
+string biasType = "D1";
 // ---------- ENUM / STRUCT ---------------------------------------
 enum BiasTF { BIAS_TF_H1 = 0, BIAS_TF_H4 = 1, BIAS_TF_D1 = 2 };
 
@@ -48,8 +48,8 @@ struct BiasResult
 datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
 int negativeTicketIndex = 0;
-// target lợi nhuận mỗi ngày
-double maxProfit = 900;
+
+double maxProfit;
 
 // negD1volumes danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 // mảng 10 phần tử để test
@@ -57,6 +57,11 @@ double maxProfit = 900;
 double negD1volumes[19] = { 0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08,0.07,0.06,0.05,0.05,0.05,0.04,0.03,0.03 };
 double negH4volumes[19] = { 0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02 };
 double negH1volumes[19] = { 0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02 };
+
+double targetCentD1List[3] = {630, 720, 900};
+double targetCentH4List[3] = {420, 480, 600};
+double targetCentH1List[3] = {210, 240, 300};
+double targetCentList[];
 
 
 // negTicketList là danh sách ticket tương ứng với negD1volumes
@@ -68,24 +73,25 @@ TicketInfo frozTicketList[];
 
 
 // targetByIndex để xác định nó đang ở vị trí bao nhiêu trong negD1volumes, nếu vị trí đặt stop = targetByIndex1 thì target lợi nhuận khác, = targetByIndex2 thì khác
-int    targetByIndex1, targetByIndex2;
+int targetByIndex1, targetByIndex2;
+
 
 int totalSell = 0;
 int totalBuy = 0;
 int totalNone = 0;
 int lastLoggedDay = -1;
 
-// orderTypeBias biến khởi tạo đẻ xác định hôm nay đánh bài nào
+// orderTypeBias biến khởi tạo đẻ xác định bias đánh bài nào
 ENUM_ORDER_TYPE orderTypeBias;
-ENUM_ORDER_TYPE orderTypeH4Bias;
-ENUM_ORDER_TYPE orderTypeH1Bias;
 
 // isRunningBIAS xác định nó có trạng thái nào. 0 là không chạy, 1 là đang chạy. để dùng cho logic start dailybias và scan daily bias
 bool isRunningBIAS = false;
 // priceInitEntry xác định giá của lệnh đầu tiên trong ngày để so sánh nếu giá thuận xu hướng thì chạy logic DCA Dương còn ngược thì quét list DCA âm đã khởi tạo trước đó
 double priceInitEntry;
-
+// biến xác định vol cho DCA dương
 double dcaPositiveVol;
+
+int scanHour = 0;
 
 
 string HEDGE_COMMENT_PREFIX = "HEDGE";

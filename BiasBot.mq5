@@ -51,8 +51,16 @@ void OnTimer() {
     // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
 
-  if (dt.hour == 0 && dt.min == 0 && dt.sec == 0 && !isRunningBIAS) {
-    startBias(DAILY_BIAS);
+  int hour = scanHour;
+  bool runningBias = isRunningBIAS;
+  // từ 8h UTC = 15H VN mà chưa có chạy signal hoặc đã kết thúc công việc hôm nay thì return luôn k chạy nữa
+  if(dt.hour >= 8 && !isRunningBIAS){
+    scanHour = 0;
+    return;
+  }
+
+  if (dt.hour == scanHour && !isRunningBIAS) {
+    startBias();
     dailyBiasStartTime = now;
   }
 
@@ -69,7 +77,15 @@ void OnTimer() {
   // }
 
   if (isRunningBIAS) {
-    scanDCANegative(DAILY_BIAS);
+    scanDCANegative();
+    double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
+    if(totalProfitFromTime >= maxProfit){
+      // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
+      // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
+      scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
+      CloseAllOrdersAndPositions();
+      isRunningBIAS = false;
+    }
   }
 
 }

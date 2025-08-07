@@ -21,6 +21,9 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
 
    if (trans.type == TRADE_TRANSACTION_DEAL_ADD)
    {
+      datetime now = TimeCurrent();
+      MqlDateTime dt;
+      TimeToStruct(now, dt);
       ulong deal_ticket = trans.deal;
       if (HistoryDealSelect(deal_ticket))
       {
@@ -30,15 +33,22 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
             double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
             CloseAllOrders();
             // tổng lợi nhuận từ lúc start dailyBias lớn hơn targetCentDailyBias dù còn lệnh frozen thì đóng tất cả luôn
-            if(totalProfitFromTime >= targetCentDailyBias){
+            if(totalProfitFromTime >= maxProfit){
+               // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
+               // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
+               scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
                CloseAllPosition();
-               isRunningBIAS = 0;
+               isRunningBIAS = false;
             } else {
                // đoạn này kích hoạt hedging cho các lệnh frozen nếu còn lệnh nhưng chưa có logic hedging thì tạm đóng all lệnh và ngừng dailybias
+               
+               // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
+               // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
+               scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
                ArrayFree(negTicketList);
                ArrayFree(posTicketList);
                CloseAllPosition(); // GOOD HEDGING 
-               isRunningBIAS = 0;
+               isRunningBIAS = false;
             }
          }
          else if (reason == DEAL_REASON_SL) {

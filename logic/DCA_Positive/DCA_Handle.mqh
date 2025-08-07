@@ -8,27 +8,23 @@
 // tiếp tục nếu gá chạm 3307 thi đặt 1 lệnh BUY STOP ở 3308 đồng thời dời SL của 3305 và 3306 lên 3306.5
 void handleDCAPositive(ulong ticketId) {
 
-  ENUM_ORDER_TYPE orderType = getBiasOrderType( biasTYPE);
-  TicketInfo positiveTicketsByBiasType[];
-  getBiasArray(POSITIVE_ARRAY, positiveTicketsByBiasType);
-
   double entryToNextAction = 0;
-  for (uint i = 0; i < positiveTicketsByBiasType.Size(); i++) {
+  for (uint i = 0; i < posTicketList.Size(); i++) {
     TicketInfo ticket;
-    ticket = positiveTicketsByBiasType[i];
+    ticket = posTicketList[i];
     if (ticket.ticketId == ticketId) {
       ticket.state = STATE_OPEN_DCA;
-      positiveTicketsByBiasType[i] = ticket;
+      posTicketList[i] = ticket;
       entryToNextAction = ticket.price;
       // khớp lệnh stop thuận hướng thì đặt 1 lệnh stop ngược hướng
-      orderFrozenByTicketId(ticketId); // chỗ này phải sửa
+      orderFrozenByTicketId(ticketId);
       break;
     }
   }
   // không khớp lệnh nào khớp, không có hành động tiếp theo
   if (entryToNextAction == 0) return;
   // gọi isOnlyFirst trước khi gọi orderStopFollowTrend bởi vì orderStopFollowTrend sẽ thêm 1 phần tử vào mảng
-  bool isOnlyFirst = positiveTicketsByBiasType.Size() == 1;
+  bool isOnlyFirst = posTicketList.Size() == 1;
   orderStopFollowTrend(entryToNextAction);
   // nếu vô hàm này mà mảng chỉ có 1 phần tử thì có nghĩa là khớp lệnh lần đầu tiên nên return chứ k có step dời SL
   if (isOnlyFirst) {
@@ -36,17 +32,17 @@ void handleDCAPositive(ulong ticketId) {
   }
 
   // khi mảng posTicketList có 2 phần tử trở lên nghĩa là lệnh cao nhất đã khớp, khớp thì dời sl lệnh thấp về giá của lệnh cao nhất - 0.5 giá
-  for (uint i = 0; i < positiveTicketsByBiasType.Size(); i++) {
+  for (uint i = 0; i < posTicketList.Size(); i++) {
     TicketInfo ticket;
-    ticket = positiveTicketsByBiasType[i];
+    ticket = posTicketList[i];
     double sl = 0;
     if (ticket.state == STATE_OPEN_DCA && !isExistsFrozenOpen(ticket.ticketId)) { // test chỉ set sl cho những lệnh có frozen chưa OPEN -> lợi nhuận ổn định hơn. 1/1/2025 - 6/6/2025 = 76.343 đồng
-      if (orderType == ORDER_TYPE_BUY && ticket.price < entryToNextAction) {
+      if (orderTypeBias == ORDER_TYPE_BUY && ticket.price < entryToNextAction) {
         // nếu lần đầu DCA dương thì SL của từng lệnh sẽ là giá vào lệnh cộng nửa giá
         // còn nếu không phải lần đầu thì lấy giá của lệnh vừa khớp ở trên cao trừ cho nửa giá
         sl = checkFirstDCAPositive() ? (ticket.price + 0.5) : (entryToNextAction - 0.5);
       }
-      else if(orderType == ORDER_TYPE_SELL && ticket.price > entryToNextAction) {
+      else if(orderTypeBias == ORDER_TYPE_SELL && ticket.price > entryToNextAction) {
         // với sell thì ngược lại cái trên
         sl = checkFirstDCAPositive() ? (ticket.price - 0.5) : (entryToNextAction + 0.5);
       }

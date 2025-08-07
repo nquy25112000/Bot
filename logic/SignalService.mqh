@@ -5,22 +5,24 @@
 // Khởi động chiến lược Daily Bias:
 // Tạo lệnh đầu tiên và thiết lập các lệnh chờ (trạng thái WAITING_STOP)
 //-------------------------------------------------------------
-void startBias(string biasType) {
-  clearDataByType();
-  biasTYPE = biasType;
-  dcaPositiveVol = biasType == DAILY_BIAS ? 0.1 : (biasType == H4_BIAS ? 0.08 : 0.06);
-  ENUM_ORDER_TYPE orderTypeByBiasType = getBiasOrderType(biasType); // BUY hoặc SELL
-  printf("TYPE BIAS: %s, orderTypeByBiasType: %d", biasTYPE, orderTypeByBiasType);
-  if (orderTypeByBiasType == NULL) {
+void startBias() {
+  clearData();
+
+  orderTypeBias = getBiasOrderTypeByHour(scanHour); // BUY hoặc SELL
+  printf("TYPE BIAS: %s, orderTypeBias: %d", biasType, orderTypeBias);
+  if (orderTypeBias == -1) {
+    datetime now = TimeCurrent();
+    MqlDateTime dt;
+    TimeToStruct(now, dt);
+    scanHour = dt.hour + 1; // nếu không có signal gì thì scanHour + 1 cho giờ tiếp theo tiếp tục quét
     return;
   }
-
-  double currentPrice = getCurrentPrice(orderTypeByBiasType);
-  // clear toàn bộ data cũ
-  // Khởi tạo lệnh STOP cách lệnh đầu tiên 2 giá thuận xu hướng
-  //orderStopFollowTrend(orderTypeByBiasType == ORDER_TYPE_BUY ? currentPrice + 1: currentPrice - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền currentPrice + 1
+  isRunningBIAS = true;
   // Khởi tạo DCA âm
-  initDCANegative(biasType);
+  initDCANegative();
+  // Khởi tạo lệnh STOP cách lệnh đầu tiên 2 giá thuận xu hướng. priceInitEntry là price đã được set cho lệnh đầu tiên DCA âm tại hàm initDCANegative();
+  orderStopFollowTrend(orderTypeBias == ORDER_TYPE_BUY ? priceInitEntry + 1: priceInitEntry - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền priceInitEntry + 1
+  initTargetCentList();
 }
 
 #endif // __SIGNAL_SERVICE_MQH__
