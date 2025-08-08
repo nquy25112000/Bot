@@ -6,35 +6,26 @@
 
 #define  SW_HIDE   0
 
-//--- Import ShellExecuteW trực tiếp
 #import "shell32.dll"
 int ShellExecuteW(int hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
 #import
 
-//--- Thư mục micro-service
 string BiasServiceDir()
 {
    return TerminalInfoString(TERMINAL_DATA_PATH) +
           "\\MQL5\\Experts\\Advisors\\Bot\\logic\\Detect\\AIScanBIAS";
 }
 
-//------------------------------------------------------------------
-//| KHỞI CHẠY micro-service                                         |
-//------------------------------------------------------------------
 bool StartBiasService()
 {
-   string dir = BiasServiceDir();  // ví dụ: Z:\Users\...\AIScanBIAS
+   string dir = BiasServiceDir();
 
-   // Đường dẫn python trong venv macOS/Linux
-   string py_unix = dir + "\\.venv\\bin\\python";
-   // Đường dẫn python trong venv Windows
-   string py_win  = dir + "\\.venv\\Scripts\\python.exe";
+   string py_unix = dir + "\\.venv\\bin\\python";          // mac/linux venv
+   string py_win  = dir + "\\.venv\\Scripts\\python.exe";  // windows venv
 
    string pythonExe = "";
-   if (FileIsExist(py_unix))
-      pythonExe = py_unix;
-   else if (FileIsExist(py_win))
-      pythonExe = py_win;
+   if (FileIsExist(py_unix)) pythonExe = py_unix;
+   else if (FileIsExist(py_win)) pythonExe = py_win;
 
    if (pythonExe == "")
    {
@@ -42,9 +33,7 @@ bool StartBiasService()
       return false;
    }
 
-   // Port 8001 theo yêu cầu của bạn
-   string params = "-m uvicorn app.main:app --host 127.0.0.1 --port 8010";
-
+   string params = "-m uvicorn app.main:app --host 127.0.0.1 --port 8001";
    int rc = ShellExecuteW(0, "open", pythonExe, params, dir, SW_HIDE);
    if (rc <= 32)
    {
@@ -56,15 +45,11 @@ bool StartBiasService()
    return true;
 }
 
-//------------------------------------------------------------------
-//| DỪNG micro-service                                              |
-//------------------------------------------------------------------
 void StopBiasService()
 {
-   // Trên mac/Linux, uvicorn chạy qua python nên process name khác
-   // Nếu muốn kill chuẩn, nên lưu pid khi start hoặc kill theo port
-   ShellExecuteW(0, "open", "taskkill", "/IM uvicorn.exe /F", "", SW_HIDE);
-   Print("⛔ AIScanBIAS stopped.");
+   // Kill theo port cho chắc (trên mac chạy qua python, không phải uvicorn.exe)
+   // Bạn có thể gọi thủ công bằng script riêng. Tạm giữ placeholder:
+   Print("⛔ Gợi ý dừng: lsof -ti :8001 | xargs -r kill");
 }
 
 #endif // __BIAS_SERVICE_UTILS_MQH__

@@ -6,7 +6,7 @@ int OnInit()
 
   // 1) Khởi chạy micro-service
   StartBiasService();
-
+  Print("BiasServiceDir() = ", BiasServiceDir());
   // 2) Xác định thời điểm 15:00 hôm nay (giờ máy = UTC+7 của bạn)
   string today = TimeToString(TimeLocal(), TIME_DATE);  // YYYY.MM.DD
   g_stopTime = StringToTime(today + " 15:00");        // 15:00 local
