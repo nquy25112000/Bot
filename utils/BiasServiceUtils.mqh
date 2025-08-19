@@ -19,31 +19,32 @@ string BiasServiceDir()
 bool StartBiasService()
 {
    string dir = BiasServiceDir();
+   string envExe = "Z:\\usr\\bin\\env"; // Wine map /usr/bin/env
+   string script = dir + "\\run_api.sh";
 
-   string py_unix = dir + "\\.venv\\bin\\python";          // mac/linux venv
-   string py_win  = dir + "\\.venv\\Scripts\\python.exe";  // windows venv
-
-   string pythonExe = "";
-   if (FileIsExist(py_unix)) pythonExe = py_unix;
-   else if (FileIsExist(py_win)) pythonExe = py_win;
-
-   if (pythonExe == "")
+   if(!FileIsExist(envExe))
    {
-      Print("❌ Không tìm thấy Python trong venv. Hãy tạo venv & cài deps ở thư mục AIScanBIAS.");
+      Print("❌ Không tìm thấy Z:\\usr\\bin\\env");
+      return false;
+   }
+   if(!FileIsExist(script))
+   {
+      PrintFormat("❌ Không thấy script: %s", script);
       return false;
    }
 
-   string params = "-m uvicorn app.main:app --host 127.0.0.1 --port 8001";
-   int rc = ShellExecuteW(0, "open", pythonExe, params, dir, SW_HIDE);
+   string args = "bash \"" + script + "\"";
+   int rc = ShellExecuteW(0, "open", envExe, args, dir, SW_HIDE);
    if (rc <= 32)
    {
-      PrintFormat("❌ ShellExecuteW thất bại (rc=%d). file=%s params=%s", rc, pythonExe, params);
+      PrintFormat("❌ ShellExecuteW thất bại (rc=%d)", rc);
       return false;
    }
 
-   Print("✅ AIScanBIAS started (python -m uvicorn).");
+   Print("🚀 AIScanBIAS script started");
    return true;
 }
+
 
 void StopBiasService()
 {

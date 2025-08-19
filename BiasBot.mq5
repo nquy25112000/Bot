@@ -5,8 +5,12 @@ int OnInit()
 {
 
   // 1) Khởi chạy micro-service
-  StartBiasService();
   Print("BiasServiceDir() = ", BiasServiceDir());
+  if (!StartBiasService())
+  {
+    Print("❌ Không start được AIScanBIAS");
+    return(INIT_FAILED);
+  }
   // 2) Xác định thời điểm 15:00 hôm nay (giờ máy = UTC+7 của bạn)
   string today = TimeToString(TimeLocal(), TIME_DATE);  // YYYY.MM.DD
   g_stopTime = StringToTime(today + " 15:00");        // 15:00 local
@@ -62,7 +66,7 @@ void OnTimer() {
   int hour = scanHour;
   bool runningBias = isRunningBIAS;
   // từ 8h UTC = 15H VN mà chưa có chạy signal hoặc đã kết thúc công việc hôm nay thì return luôn k chạy nữa
-  if(dt.hour >= 8 && !isRunningBIAS){
+  if (dt.hour >= 8 && !isRunningBIAS) {
     scanHour = 0;
     return;
   }
@@ -93,7 +97,7 @@ void OnTimer() {
   if (isRunningBIAS) {
     scanDCANegative();
     double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
-    if(totalProfitFromTime >= maxProfit){
+    if (totalProfitFromTime >= maxProfit) {
       // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
       // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
       scanHour = dt.hour >= 7 ? 0 : dt.hour + 1;
