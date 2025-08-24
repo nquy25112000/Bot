@@ -66,6 +66,10 @@ void updateTpForOpenTicket() {
 
     }
   }
+  
+  if(sumVolumeOpen == 0){
+   return;
+  }
 
   double averagePrice = sumPriceOpen / sumVolumeOpen;
   double tp = CalcTP(averagePrice, sumVolumeOpen, negativeTicketIndex);
@@ -99,7 +103,11 @@ void updateTicketInfo(ulong ticketId, double price) {
     TicketInfo ticket;
     ticket = negTicketList[i];
     if (ticket.ticketId == ticketId) {
-      ticket.state = STATE_OPEN;
+      if(i != 0 && i >= (uint)indexNegativeActiveHedge){
+         ticket.state = STATE_OPEN_HEDGE;
+      } else {
+         ticket.state = STATE_OPEN;
+      }
       ticket.price = price;
       negTicketList[i] = ticket;
     }
