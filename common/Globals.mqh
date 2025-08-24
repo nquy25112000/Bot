@@ -55,7 +55,7 @@ datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
 int negativeTicketIndex = 0;
 
-double maxProfit;
+input double maxProfit = 300;
 
 // negD1volumes danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 // mảng 10 phần tử để test
@@ -64,9 +64,10 @@ double negD1volumes[19] = { 0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.1,0.09,0.08
 double negH4volumes[19] = { 0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.06,0.06,0.05,0.04,0.04,0.04,0.03,0.02,0.02 };
 double negH1volumes[19] = { 0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02 };
 
-double targetCentD1List[3] = {630, 720, 900};
-double targetCentH4List[3] = {420, 480, 600};
-double targetCentH1List[3] = {210, 240, 300};
+// list gồm 3 phần tử
+// phần tử đầu tiên: khi negativeTicketIndex < 11.
+// thứ 2: 11 < negativeTicketIndex < 19
+// thứ 3: = 19
 double targetCentList[];
 
 
@@ -97,7 +98,17 @@ double priceInitEntry;
 // biến xác định vol cho DCA dương
 double dcaPositiveVol;
 
+// biến set Giờ scan daliy bias
 int scanHour = 0;
+
+// % vol của mảng DCA âm để đạt điều kiện update state OPEN_HEDGE
+double percentVolActiveHedge = 0.45;
+
+// khởi tạo sẵn 1 biến index đạt được percentVolActiveHedge của volume list.
+// ví dụ khi đạt 45% tổng vol thì set state thành OPEN_HEDGE
+// biến này cộng dồn từ 0 cho tới index mà đạt được đủ số %
+// khi khớp lệnh chỉ cần check index lệnh khớp > biến này thì set state là OPEN_HEDGE
+int indexNegativeActiveHedge ;
 
 
 string HEDGE_COMMENT_PREFIX = "HEDGE";
@@ -108,9 +119,10 @@ int    HEDGE_MAGIC = 20250727;
 #define STATE_WAITING_STOP "WAITING_STOP"
 #define STATE_ACTIVE_STOP  "ACTIVE_STOP"
 #define STATE_SKIP         "SKIP"
+#define STATE_OPEN_HEDGE   "OPEN_HEDGE"
 
 // Dành cho DCA dương
-#define STATE_OPEN_DCA         "OPEN_DCA_HEDGE"
+#define STATE_OPEN_DCA         "OPEN_DCA"
 #define STATE_ACTIVE_STOP_DCA  "ACTIVE_STOP_DCA"
 
 // dành cho frozen
