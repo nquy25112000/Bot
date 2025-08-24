@@ -33,7 +33,7 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
             // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
             scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
             isRunningBIAS = false;
-            CloseAllPosition();
+            CloseAllOrdersAndPositions();
             /*double targetCentDailyBias = getTargetCentDailyBias(negativeTicketIndex);
             double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
             CloseAllOrders();
