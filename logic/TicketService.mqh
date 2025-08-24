@@ -29,7 +29,12 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
       {
          ENUM_DEAL_REASON reason = (ENUM_DEAL_REASON)HistoryDealGetInteger(deal_ticket, DEAL_REASON);
          if (reason == DEAL_REASON_TP) {
-            double targetCentDailyBias = getTargetCentDailyBias(negativeTicketIndex);
+            // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
+            // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
+            scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
+            isRunningBIAS = false;
+            CloseAllPosition();
+            /*double targetCentDailyBias = getTargetCentDailyBias(negativeTicketIndex);
             double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
             CloseAllOrders();
             // tổng lợi nhuận từ lúc start dailyBias lớn hơn targetCentDailyBias dù còn lệnh frozen thì đóng tất cả luôn
@@ -49,7 +54,7 @@ void TicketOnTradeTransaction(const MqlTradeTransaction& trans,
                ArrayFree(posTicketList);
                CloseAllPosition(); // GOOD HEDGING 
                isRunningBIAS = false;
-            }
+            }*/
          }
          else if (reason == DEAL_REASON_SL) {
             // update state cho các lệnh DCA

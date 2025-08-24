@@ -51,8 +51,11 @@ void OnTimer() {
     // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
 
-  int hour = scanHour;
-  bool runningBias = isRunningBIAS;
+  // set thời gian bắt đầu cho daily bias ngày mới
+  if(dt.hour == 0 && dt.min == 0 && dt.sec == 0) {
+      dailyBiasStartTime = now;
+  }
+  
   // từ 8h UTC = 15H VN mà chưa có chạy signal hoặc đã kết thúc công việc hôm nay thì return luôn k chạy nữa
   if(dt.hour >= 8 && !isRunningBIAS){
     scanHour = 0;
@@ -61,7 +64,6 @@ void OnTimer() {
 
   if (dt.hour == scanHour && !isRunningBIAS) {
     startBias();
-    dailyBiasStartTime = now;
   }
 
   // [D1 7H> NONE > H4(7H) > NONE > H1(7H,8H,9H,10) > H4(11H) > NONE > H1(11H,12H,13H,14H)]  TOI 14H K CO SIGNAL NGHI LUON
@@ -79,15 +81,14 @@ void OnTimer() {
   if (isRunningBIAS) {
     scanDCANegative();
     double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
-    if(totalProfitFromTime >= maxProfit){
-      // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
-      // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
-      scanHour = dt.hour >= 7 ? 0 : dt.hour + 1; 
+    // đạt target ngày hoặc là hết time chạy bias thì dừng toàn bộ hoạt động sau 18h UTC = 24h VN
+    if(totalProfitFromTime >= maxProfit || dt.hour > 17) {
+      scanHour = 0; 
       CloseAllOrdersAndPositions();
       isRunningBIAS = false;
     }
   }
-
+ 
 }
 
 void OnTradeTransaction(const MqlTradeTransaction& trans,

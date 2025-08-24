@@ -44,12 +44,10 @@ int getBiasOrderType(BiasTF timeFrameRequest) {
    biasResult = DetectBias(cfg);
    if (biasResult.type == "SELL") {
       setDataByTimeFrame(timeFrameRequest);
-      isRunningBIAS = true;
       return 1;
    }
    else if (biasResult.type == "BUY") {
       setDataByTimeFrame(timeFrameRequest);
-      isRunningBIAS = true;
       return 0;
    }
    else {
@@ -66,33 +64,53 @@ int getBiasOrderType(BiasTF timeFrameRequest) {
 }
 
 void setDataByTimeFrame(BiasTF timeFrameRequest){
-   isRunningBIAS = true;
    if(timeFrameRequest == BIAS_TF_D1){
       dcaPositiveVol = 0.1;
       biasType = DAILY_BIAS;
-      maxProfit = 900;
    } else if(timeFrameRequest == BIAS_TF_H4){
       dcaPositiveVol = 0.08;
       biasType = H4_BIAS;
-      maxProfit = 600;
    } else if(timeFrameRequest == BIAS_TF_H1){
       dcaPositiveVol = 0.06;
       biasType = H1_BIAS;
-      maxProfit = 300;
+
    }
 }
 
 void initTargetCentList(){
    ArrayResize(targetCentList, 3);
-   if (biasType == DAILY_BIAS) {
-      ArrayCopy(targetCentList, targetCentD1List);
-   }
-   else if (biasType == H4_BIAS) {
-      ArrayCopy(targetCentList, targetCentH4List);
+   double maxTargetCentByBiasType = maxProfit;
+   if (biasType == H4_BIAS) {
+      maxTargetCentByBiasType = maxTargetCentByBiasType * 0.75;
    }
    else if (biasType == H1_BIAS) {
-      ArrayCopy(targetCentList, targetCentH1List);
+      maxTargetCentByBiasType = maxTargetCentByBiasType * 0.5;
    }
+   targetCentList[0] = maxTargetCentByBiasType * 0.4;
+   targetCentList[1] = maxTargetCentByBiasType * 0.7;
+   targetCentList[2] = maxTargetCentByBiasType;
+}
+
+void setIndexNegativeActiveHedge(){
+  double negativeVolumes[];
+  GetVolumeNegativeByType(negativeVolumes);
+  double totalVol = 0;
+  for(uint i = 0; i < negativeVolumes.Size(); i++){
+   totalVol += negativeVolumes[i];
+  }
+  
+  // tổng vol theo % đã set
+  double volByPercent = totalVol * percentVolActiveHedge;
+  
+  // tính tổng vol từ 0 cho tới khi đạt >= volByPercent thì trả về index
+  double totalVolActiveHedge = 0;
+  for(uint i = 0; i <= negativeVolumes.Size(); i++){
+   totalVolActiveHedge += negativeVolumes[i];
+   if(totalVolActiveHedge >= volByPercent){
+      indexNegativeActiveHedge = (int)i;
+      return;
+   }
+  }
 }
 
 #endif // __BIAS_DATA_BY_TYPE_MQH__

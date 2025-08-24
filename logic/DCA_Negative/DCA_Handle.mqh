@@ -71,9 +71,10 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
 
   // Giá hiện tại đi thuận xu hướng thì thoát chứ không có quét qua mảng giá âm
   if ((orderTypeBias == ORDER_TYPE_BUY && currentPrice > priceInitEntry)
-    || (orderTypeBias == ORDER_TYPE_SELL && currentPrice < priceInitEntry)) {
+    || (orderTypeBias == ORDER_TYPE_SELL && currentPrice < priceInitEntry) || negTicketList.Size() == 0) {
     return;
   }
+  
 
   int beautifulEntryIndex = 0;
   // totalVolume để tính tổng vol của các lệnh trước đó gộp lại cho lệnh ở vị trí đẹp nhất
@@ -86,7 +87,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
     TicketInfo ticketInfo;
     ticketInfo = negTicketList[i];
     totalVolume = totalVolume + ticketInfo.volume;
-    if (ticketInfo.state == STATE_OPEN) {
+    if (ticketInfo.state == STATE_OPEN || ticketInfo.state == STATE_OPEN_HEDGE) {
       totalVolume = 0; // tại vì nếu đã thuộc OPEN hoặc ACTIVE_STOP thì những lệnh phía trên nó đã được gộp vol vô lệnh này nên set 0 bắt đầu lại
       continue;
     }
@@ -150,7 +151,7 @@ void scanDCANegative() { // tên cũ nó là scanDailyBias
     for (int i = 1; i < beautifulEntryIndex; i++) {
       TicketInfo info;
       info = negTicketList[i];
-      if (info.state != STATE_OPEN) {
+      if (info.state != STATE_OPEN && info.state != STATE_OPEN_HEDGE) {
         if (info.state == STATE_ACTIVE_STOP) {
           CloseByTicket(info.ticketId);
         }
