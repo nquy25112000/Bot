@@ -98,10 +98,10 @@ void setIndexNegativeActiveHedge(){
   for(uint i = 0; i < negativeVolumes.Size(); i++){
    totalVol += negativeVolumes[i];
   }
-  
+
   // tổng vol theo % đã set
   double volByPercent = totalVol * percentVolActiveHedge;
-  
+
   // tính tổng vol từ 0 cho tới khi đạt >= volByPercent thì trả về index
   double totalVolActiveHedge = 0;
   for(uint i = 0; i <= negativeVolumes.Size(); i++){

@@ -13,7 +13,7 @@ CTrade trade;
 #include "../logic/Detect/ScanBIAS.mqh"
 #include "../logic/Detect/LogicBIAS.mqh"
 #include "../logic/Detect/CandlePattern.mqh"
-#include "../logic/Detect/AI_Detect.mqh"
+//#include "../logic/Detect/AI_Detect.mqh"
 
 #include "../logic/SignalService.mqh"
 #include "../logic/TicketService.mqh"
@@ -37,6 +37,7 @@ CTrade trade;
 #include "./GetTotalProfitFrom.mqh"
 #include "./CalcTP.mqh"
 #include "./HandleBiasDataByType.mqh"
+#include "./BiasServiceUtils.mqh"
 
 
 #endif // __INCLUDE_MQH__

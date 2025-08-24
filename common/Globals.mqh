@@ -44,6 +44,12 @@ struct BiasResult
    string patternStrength;
 };
 
+BiasResult rsAI_D1bias;
+BiasResult rsAI_H4bias;
+BiasResult rsAI_H1bias;
+
+datetime g_stopTime;   // mốc 15:00 (UTC+7)
+
 // thời gian start daily bias. dùng để xác định thời gian bắt đầu của 1 lần chạy daily để tính toán lợi nhuận từ thời điểm start đến hiện tại
 datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
@@ -59,7 +65,7 @@ double negH4volumes[19] = { 0.02,0.03,0.04,0.05,0.06,0.06,0.07,0.08,0.08,0.07,0.
 double negH1volumes[19] = { 0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.03,0.02,0.02,0.02 };
 
 // list gồm 3 phần tử
-// phần tử đầu tiên: khi negativeTicketIndex < 11. 
+// phần tử đầu tiên: khi negativeTicketIndex < 11.
 // thứ 2: 11 < negativeTicketIndex < 19
 // thứ 3: = 19
 double targetCentList[];
@@ -98,7 +104,7 @@ int scanHour = 0;
 // % vol của mảng DCA âm để đạt điều kiện update state OPEN_HEDGE
 double percentVolActiveHedge = 0.45;
 
-// khởi tạo sẵn 1 biến index đạt được percentVolActiveHedge của volume list. 
+// khởi tạo sẵn 1 biến index đạt được percentVolActiveHedge của volume list.
 // ví dụ khi đạt 45% tổng vol thì set state thành OPEN_HEDGE
 // biến này cộng dồn từ 0 cho tới index mà đạt được đủ số %
 // khi khớp lệnh chỉ cần check index lệnh khớp > biến này thì set state là OPEN_HEDGE

@@ -3,7 +3,19 @@
 
 int OnInit()
 {
-  if(!EnsureBiasService()) return(INIT_FAILED);
+
+  // 1) Khởi chạy micro-service
+  Print("BiasServiceDir() = ", BiasServiceDir());
+  if (!StartBiasService())
+  {
+    Print("❌ Không start được AIScanBIAS");
+    return(INIT_FAILED);
+  }
+  // 2) Xác định thời điểm 15:00 hôm nay (giờ máy = UTC+7 của bạn)
+  string today = TimeToString(TimeLocal(), TIME_DATE);  // YYYY.MM.DD
+  g_stopTime = StringToTime(today + " 15:00");        // 15:00 local
+
+  //if (!EnsureBiasService()) return(INIT_FAILED);
   InitializeBiasIndicators(_Symbol);
   EventSetTimer(1);
   return(INIT_SUCCEEDED);
@@ -12,7 +24,7 @@ int OnInit()
 
 void OnDeinit(const int reason)
 {
-
+  StopBiasService();
 }
 
 void OnTick()
@@ -51,21 +63,25 @@ void OnTimer() {
     // Hoặc nếu bạn vẫn muốn log text: LogDailyBias(br, 7);
   }
 
-  // set thời gian bắt đầu cho daily bias ngày mới
-  if(dt.hour == 0 && dt.min == 0 && dt.sec == 0) {
-      dailyBiasStartTime = now;
-  }
-  
+  int hour = scanHour;
+  bool runningBias = isRunningBIAS;
   // từ 8h UTC = 15H VN mà chưa có chạy signal hoặc đã kết thúc công việc hôm nay thì return luôn k chạy nữa
-  if(dt.hour >= 8 && !isRunningBIAS){
+  if (dt.hour >= 8 && !isRunningBIAS) {
     scanHour = 0;
     return;
   }
 
   if (dt.hour == scanHour && !isRunningBIAS) {
     startBias();
+    dailyBiasStartTime = now;
   }
 
+  if (TimeLocal() >= g_stopTime)
+  {
+    Print("Đã tới 15:00 – dừng AIScanBIAS");
+    StopBiasService();
+    EventKillTimer();   // ngừng timer, tránh gọi lại
+  }
   // [D1 7H> NONE > H4(7H) > NONE > H1(7H,8H,9H,10) > H4(11H) > NONE > H1(11H,12H,13H,14H)]  TOI 14H K CO SIGNAL NGHI LUON
 
   // double pnl = AccountInfoDouble(ACCOUNT_EQUITY) - AccountInfoDouble(ACCOUNT_BALANCE);
@@ -81,14 +97,15 @@ void OnTimer() {
   if (isRunningBIAS) {
     scanDCANegative();
     double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
-    // đạt target ngày hoặc là hết time chạy bias thì dừng toàn bộ hoạt động sau 18h UTC = 24h VN
-    if(totalProfitFromTime >= maxProfit || dt.hour > 17) {
-      scanHour = 0; 
+    if (totalProfitFromTime >= maxProfit) {
+      // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
+      // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
+      scanHour = dt.hour >= 7 ? 0 : dt.hour + 1;
       CloseAllOrdersAndPositions();
       isRunningBIAS = false;
     }
   }
- 
+
 }
 
 void OnTradeTransaction(const MqlTradeTransaction& trans,
