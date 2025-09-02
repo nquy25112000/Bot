@@ -70,18 +70,24 @@ void OnTimer() {
     scanHour = 0;
     return;
   }
+  
+  if(scanHour == 0){
+   dailyBiasStartTime = now;
+  }
+
 
   if (dt.hour == scanHour && !isRunningBIAS) {
     startBias();
-    dailyBiasStartTime = now;
   }
 
+  /*
   if (TimeLocal() >= g_stopTime)
   {
     Print("Đã tới 15:00 – dừng AIScanBIAS");
     StopBiasService();
     EventKillTimer();   // ngừng timer, tránh gọi lại
   }
+  */
   // [D1 7H> NONE > H4(7H) > NONE > H1(7H,8H,9H,10) > H4(11H) > NONE > H1(11H,12H,13H,14H)]  TOI 14H K CO SIGNAL NGHI LUON
 
   // double pnl = AccountInfoDouble(ACCOUNT_EQUITY) - AccountInfoDouble(ACCOUNT_BALANCE);
@@ -93,11 +99,11 @@ void OnTimer() {
   //   string states[] = { STATE_OPEN }; // hoặc {"*"} nếu muốn gom tất cả comment
   //   Hedging_Hybrid_Dynamic(states, ArraySize(states), TG, CFG);
   // }
-
+  
   if (isRunningBIAS) {
     scanDCANegative();
     double totalProfitFromTime = GetTotalProfitFrom(dailyBiasStartTime);
-    if (totalProfitFromTime >= maxProfit) {
+    if (totalProfitFromTime >= maxProfit || dt.hour == 17) {
       // nếu kết thúc chuỗi lệnh mà thời điểm hiện tại dt.hour >= 7 nghĩa là đã 14h VN thì trả scanHour về 0 để qua ngày sau nó chạy lại
       // ngược lại < 7 thì thời gian scan tiếp theo sẽ là 1 tiếng sau
       scanHour = dt.hour >= 7 ? 0 : dt.hour + 1;

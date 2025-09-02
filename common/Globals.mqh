@@ -55,7 +55,7 @@ datetime dailyBiasStartTime;
 // biến negativeTicketIndex dùng để xác định nó đã đi được đến entry nào của mảng DCA Âm
 int negativeTicketIndex = 0;
 
-input double maxProfit = 300;
+input double maxProfit = 500;
 
 // negD1volumes danh sách volume được list sẵn ra cho mỗi lệnh DCA âm
 // mảng 10 phần tử để test
