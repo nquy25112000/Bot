@@ -79,6 +79,61 @@ void OnTimer() {
   if (dt.hour == scanHour && !isRunningBIAS) {
     startBias();
   }
+  
+  // hàm test ép start dailybias. chay cái này thì comment dòng 79 đến 81 lại
+  datetime cmpTime = StringToTime("2025.04.09 00:00:00");
+  if(now == cmpTime){
+     isRunForce = true;
+     clearData();
+     orderTypeBias = ORDER_TYPE_BUY; // BUY hoặc SELL
+     dcaPositiveVol = 0.06;
+     datetime now = TimeCurrent();
+     MqlDateTime dt;
+     TimeToStruct(now, dt);
+     scanHour = dt.hour + 1;
+     isRunningBIAS = true;
+     // Khởi tạo DCA âm
+     initDCANegative();
+     // Khởi tạo lệnh STOP cách lệnh đầu tiên 2 giá thuận xu hướng. priceInitEntry là price đã được set cho lệnh đầu tiên DCA âm tại hàm initDCANegative();
+     orderStopFollowTrend(orderTypeBias == ORDER_TYPE_BUY ? priceInitEntry + 1: priceInitEntry - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền priceInitEntry + 1
+     initTargetCentList();
+     setIndexNegativeActiveHedge();
+  }
+  
+  // ép TP
+  if(isRunForce == true && GetTotalProfitFrom(dailyBiasStartTime) >= 100){
+      scanHour = dt.hour >= 7 ? 0 : dt.hour + 1;
+      CloseAllOrdersAndPositions();
+      isRunningBIAS = false;
+      isRunForce = false;
+      isTP = true;
+  }
+  
+  /*
+  // khi tp xong thì chạy coi thử startBias làm gì tiếp theo còn không thì cho nó chạy đoạn dưới
+  if (isTP = true && dt.hour == scanHour && !isRunningBIAS) {
+    startBias();
+  }
+  */
+  
+  // lần chạy đầu mà TP thì ép lần chạy thứ 2 chạy lại vào giờ tiếp theo
+  if (isTP == true && dt.hour == scanHour && !isRunningBIAS) {
+     clearData();
+     orderTypeBias = ORDER_TYPE_BUY; // BUY hoặc SELL
+     dcaPositiveVol = 0.06;
+     datetime now = TimeCurrent();
+     MqlDateTime dt;
+     TimeToStruct(now, dt);
+     scanHour = dt.hour + 1;
+     isRunningBIAS = true;
+     // Khởi tạo DCA âm
+     initDCANegative();
+     // Khởi tạo lệnh STOP cách lệnh đầu tiên 2 giá thuận xu hướng. priceInitEntry là price đã được set cho lệnh đầu tiên DCA âm tại hàm initDCANegative();
+     orderStopFollowTrend(orderTypeBias == ORDER_TYPE_BUY ? priceInitEntry + 1: priceInitEntry - 1); // hàm này nó cộng sẵn 1 rồi nên chỉ cần truyền priceInitEntry + 1
+     initTargetCentList();
+     setIndexNegativeActiveHedge();
+     isTP = false;
+  }
 
   /*
   if (TimeLocal() >= g_stopTime)
