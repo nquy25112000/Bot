@@ -1,6 +1,10 @@
 // Include
 #include "./utils/Include.mqh"
 
+bool isRunForce = false;
+bool isTP = false;
+
+
 int OnInit()
 {
 
